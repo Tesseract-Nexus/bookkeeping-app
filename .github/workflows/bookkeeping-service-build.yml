@@ -1,4 +1,4 @@
-name: Core Service CI
+name: Bookkeeping Service CI
 
 on:
   push:
@@ -6,21 +6,21 @@ on:
       - main
       - develop
     paths:
-      - 'services/core-service/**'
+      - 'services/bookkeeping-service/**'
       - 'packages/go-shared/**'
-      - '.github/workflows/core-service-build.yml'
+      - '.github/workflows/bookkeeping-service-build.yml'
   pull_request:
     branches:
       - main
       - develop
     paths:
-      - 'services/core-service/**'
+      - 'services/bookkeeping-service/**'
       - 'packages/go-shared/**'
-      - '.github/workflows/core-service-build.yml'
+      - '.github/workflows/bookkeeping-service-build.yml'
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/core-service
+  IMAGE_NAME: ${{ github.repository }}/bookkeeping-service
   GO_VERSION: '1.25'
 
 jobs:
@@ -36,14 +36,14 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: |
-            services/core-service/go.sum
+            services/bookkeeping-service/go.sum
             packages/go-shared/go.sum
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
-          working-directory: services/core-service
+          working-directory: services/bookkeeping-service
           args: --timeout=5m
 
   test:
@@ -58,19 +58,19 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: |
-            services/core-service/go.sum
+            services/bookkeeping-service/go.sum
             packages/go-shared/go.sum
 
       - name: Run tests
-        working-directory: services/core-service
+        working-directory: services/bookkeeping-service
         run: |
           go test -v -race -coverprofile=coverage.out ./...
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
-          files: services/core-service/coverage.out
-          flags: core-service
+          files: services/bookkeeping-service/coverage.out
+          flags: bookkeeping-service
           fail_ci_if_error: false
 
   build:
@@ -110,7 +110,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: services/core-service/Dockerfile
+          file: services/bookkeeping-service/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

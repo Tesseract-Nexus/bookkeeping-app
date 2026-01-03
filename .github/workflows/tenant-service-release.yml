@@ -1,13 +1,13 @@
-name: Core Service Release
+name: Tenant Service Release
 
 on:
   push:
     tags:
-      - 'core-service/v*'
+      - 'tenant-service/v*'
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/core-service
+  IMAGE_NAME: ${{ github.repository }}/tenant-service
   GO_VERSION: '1.25'
 
 jobs:
@@ -31,17 +31,17 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: |
-            services/core-service/go.sum
+            services/tenant-service/go.sum
             packages/go-shared/go.sum
 
       - name: Run tests
-        working-directory: services/core-service
+        working-directory: services/tenant-service
         run: go test -v -race ./...
 
       - name: Extract version
         id: version
         run: |
-          VERSION=${GITHUB_REF#refs/tags/core-service/}
+          VERSION=${GITHUB_REF#refs/tags/tenant-service/}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
 
@@ -74,7 +74,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: services/core-service/Dockerfile
+          file: services/tenant-service/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -108,15 +108,15 @@ jobs:
         uses: anchore/sbom-action@v0
         with:
           image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
-          artifact-name: sbom-core-service.spdx.json
-          output-file: ./sbom-core-service.spdx.json
+          artifact-name: sbom-tenant-service.spdx.json
+          output-file: ./sbom-tenant-service.spdx.json
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Core Service ${{ steps.version.outputs.version }}
+          name: Tenant Service ${{ steps.version.outputs.version }}
           body: |
-            ## Core Service Release ${{ steps.version.outputs.version }}
+            ## Tenant Service Release ${{ steps.version.outputs.version }}
 
             ### Docker Image
             ```
@@ -127,5 +127,5 @@ jobs:
             - linux/amd64
             - linux/arm64
           files: |
-            sbom-core-service.spdx.json
+            sbom-tenant-service.spdx.json
           generate_release_notes: true

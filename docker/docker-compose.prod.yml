@@ -1,0 +1,293 @@
+version: '3.8'
+
+services:
+  # API Gateway / Load Balancer
+  traefik:
+    image: traefik:v3.0
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "letsencrypt:/letsencrypt"
+    networks:
+      - bookkeep
+    restart: unless-stopped
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ..
+      dockerfile: services/auth-service/Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - SMS_API_KEY=${SMS_API_KEY}
+      - GIN_MODE=release
+      - PORT=8081
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/api/v1/auth`)"
+      - "traefik.http.routers.auth.entrypoints=websecure"
+      - "traefik.http.routers.auth.tls.certresolver=letsencrypt"
+      - "traefik.http.services.auth.loadbalancer.server.port=8081"
+    networks:
+      - bookkeep
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Tenant Service
+  tenant-service:
+    build:
+      context: ..
+      dockerfile: services/tenant-service/Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - GIN_MODE=release
+      - PORT=8083
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tenant.rule=PathPrefix(`/api/v1/tenants`) || PathPrefix(`/api/v1/invitations`)"
+      - "traefik.http.routers.tenant.entrypoints=websecure"
+      - "traefik.http.routers.tenant.tls.certresolver=letsencrypt"
+      - "traefik.http.services.tenant.loadbalancer.server.port=8083"
+    networks:
+      - bookkeep
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8083/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Customer Service
+  customer-service:
+    build:
+      context: ..
+      dockerfile: services/customer-service/Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - GIN_MODE=release
+      - PORT=8082
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.customer.rule=PathPrefix(`/api/v1/customers`) || PathPrefix(`/api/v1/vendors`) || PathPrefix(`/api/v1/parties`)"
+      - "traefik.http.routers.customer.entrypoints=websecure"
+      - "traefik.http.routers.customer.tls.certresolver=letsencrypt"
+      - "traefik.http.services.customer.loadbalancer.server.port=8082"
+    networks:
+      - bookkeep
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+
+  # Bookkeeping Service
+  bookkeeping-service:
+    build:
+      context: ..
+      dockerfile: services/bookkeeping-service/Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - GIN_MODE=release
+      - PORT=8084
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bookkeeping.rule=PathPrefix(`/api/v1/transactions`) || PathPrefix(`/api/v1/accounts`)"
+      - "traefik.http.routers.bookkeeping.entrypoints=websecure"
+      - "traefik.http.routers.bookkeeping.tls.certresolver=letsencrypt"
+      - "traefik.http.services.bookkeeping.loadbalancer.server.port=8084"
+    networks:
+      - bookkeep
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
+    restart: unless-stopped
+
+  # Invoice Service
+  invoice-service:
+    build:
+      context: ..
+      dockerfile: services/invoice-service/Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - GIN_MODE=release
+      - PORT=8085
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.invoice.rule=PathPrefix(`/api/v1/invoices`)"
+      - "traefik.http.routers.invoice.entrypoints=websecure"
+      - "traefik.http.routers.invoice.tls.certresolver=letsencrypt"
+      - "traefik.http.services.invoice.loadbalancer.server.port=8085"
+    networks:
+      - bookkeep
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
+    restart: unless-stopped
+
+  # Report Service
+  report-service:
+    build:
+      context: ..
+      dockerfile: services/report-service/Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - GIN_MODE=release
+      - PORT=8086
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.report.rule=PathPrefix(`/api/v1/reports`)"
+      - "traefik.http.routers.report.entrypoints=websecure"
+      - "traefik.http.routers.report.tls.certresolver=letsencrypt"
+      - "traefik.http.services.report.loadbalancer.server.port=8086"
+    networks:
+      - bookkeep
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=bookkeep
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - bookkeep
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d bookkeep"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - bookkeep
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NATS Message Queue
+  nats:
+    image: nats:2-alpine
+    command: "--js --sd /data"
+    volumes:
+      - nats_data:/data
+    networks:
+      - bookkeep
+    restart: unless-stopped
+
+  # Web Application
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${API_URL}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`app.bookkeep.in`)"
+      - "traefik.http.routers.web.entrypoints=websecure"
+      - "traefik.http.routers.web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.web.loadbalancer.server.port=3000"
+    networks:
+      - bookkeep
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+
+networks:
+  bookkeep:
+    driver: overlay
+
+volumes:
+  postgres_data:
+  redis_data:
+  nats_data:
+  letsencrypt:

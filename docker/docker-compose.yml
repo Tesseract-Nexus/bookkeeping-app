@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: bookkeep-postgres
+    environment:
+      POSTGRES_USER: bookkeep
+      POSTGRES_PASSWORD: bookkeep_dev
+      POSTGRES_MULTIPLE_DATABASES: bookkeep_auth,bookkeep_tenant,bookkeep_core,bookkeep_invoice,bookkeep_customer,bookkeep_tax,bookkeep_report
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookkeep"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: bookkeep-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nats:
+    image: nats:2.10-alpine
+    container_name: bookkeep-nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"  # Monitoring
+    command: ["--jetstream", "--store_dir=/data"]
+    volumes:
+      - nats_data:/data
+
+  # MinIO for local S3-compatible storage
+  minio:
+    image: minio/minio:latest
+    container_name: bookkeep-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
+volumes:
+  postgres_data:
+  redis_data:
+  nats_data:
+  minio_data:

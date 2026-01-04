@@ -6,9 +6,15 @@ import { Providers } from '@/components/providers';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'Bookkeeping - Simple Business Accounting',
+  title: 'BookKeep - Simple Business Accounting',
   description: 'Manage your business finances with ease. Invoice, track expenses, and stay GST compliant.',
   keywords: ['bookkeeping', 'accounting', 'GST', 'invoice', 'India', 'small business'],
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({

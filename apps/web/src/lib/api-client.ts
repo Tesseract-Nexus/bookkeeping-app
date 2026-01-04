@@ -1,15 +1,12 @@
-import getConfig from 'next/config';
-
-const { serverRuntimeConfig } = getConfig() || { serverRuntimeConfig: {} };
-
 // Service URLs for server-side API calls (BFF)
+// Using process.env directly as serverRuntimeConfig doesn't work with standalone output
 export const SERVICE_URLS = {
-  auth: serverRuntimeConfig.AUTH_SERVICE_URL || 'http://localhost:8080',
-  core: serverRuntimeConfig.CORE_SERVICE_URL || 'http://localhost:8081',
-  invoice: serverRuntimeConfig.INVOICE_SERVICE_URL || 'http://localhost:8082',
-  customer: serverRuntimeConfig.CUSTOMER_SERVICE_URL || 'http://localhost:8083',
-  tax: serverRuntimeConfig.TAX_SERVICE_URL || 'http://localhost:8084',
-  report: serverRuntimeConfig.REPORT_SERVICE_URL || 'http://localhost:8085',
+  auth: process.env.AUTH_SERVICE_URL || 'http://localhost:8080',
+  core: process.env.CORE_SERVICE_URL || 'http://localhost:8081',
+  invoice: process.env.INVOICE_SERVICE_URL || 'http://localhost:8082',
+  customer: process.env.CUSTOMER_SERVICE_URL || 'http://localhost:8083',
+  tax: process.env.TAX_SERVICE_URL || 'http://localhost:8084',
+  report: process.env.REPORT_SERVICE_URL || 'http://localhost:8085',
 };
 
 export type ServiceName = keyof typeof SERVICE_URLS;

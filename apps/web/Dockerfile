@@ -35,9 +35,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 # Copy built files from monorepo standalone output
 # For pnpm monorepo, standalone output structure is: standalone/apps/web/server.js
-COPY --from=builder /app/apps/web/public ./public
+# Public folder must be relative to server.js location (apps/web/)
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
 USER nextjs
 

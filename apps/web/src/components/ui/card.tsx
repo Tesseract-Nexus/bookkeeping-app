@@ -20,30 +20,35 @@ const Card = React.forwardRef<
 Card.displayName = 'Card';
 
 // Motion card with hover effects
-const MotionCard = React.forwardRef<
-  HTMLDivElement,
-  HTMLMotionProps<'div'>
->(({ className, ...props }, ref) => (
-  <motion.div
-    ref={ref}
-    className={cn(
-      'rounded-2xl border bg-card text-card-foreground shadow-sm',
-      className
-    )}
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    whileHover={{
-      y: -4,
-      boxShadow: '0 12px 24px -8px rgba(0, 0, 0, 0.15)'
-    }}
-    transition={{
-      type: 'spring',
-      stiffness: 300,
-      damping: 20
-    }}
-    {...props}
-  />
-));
+interface MotionCardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
+  children?: React.ReactNode;
+}
+
+const MotionCard = React.forwardRef<HTMLDivElement, MotionCardProps>(
+  ({ className, children, ...props }, ref) => (
+    <motion.div
+      ref={ref}
+      className={cn(
+        'rounded-2xl border bg-card text-card-foreground shadow-sm',
+        className
+      )}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{
+        y: -4,
+        boxShadow: '0 12px 24px -8px rgba(0, 0, 0, 0.15)'
+      }}
+      transition={{
+        type: 'spring',
+        stiffness: 300,
+        damping: 20
+      }}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  )
+);
 MotionCard.displayName = 'MotionCard';
 
 // Glass card with blur effect
@@ -122,7 +127,8 @@ const CardFooter = React.forwardRef<
 CardFooter.displayName = 'CardFooter';
 
 // Metric card for dashboard
-interface MetricCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface MetricCardProps {
+  className?: string;
   title: string;
   value: string | number;
   change?: number;
@@ -132,7 +138,7 @@ interface MetricCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
-  ({ className, title, value, change, changeLabel, icon, trend = 'neutral', ...props }, ref) => {
+  ({ className, title, value, change, changeLabel, icon, trend = 'neutral' }, ref) => {
     const trendColors = {
       up: 'text-success',
       down: 'text-destructive',
@@ -150,7 +156,6 @@ const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -2 }}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-        {...props}
       >
         <div className="flex items-start justify-between">
           <div className="space-y-2">

@@ -99,11 +99,12 @@ Button.displayName = 'Button';
 
 // Motion-enhanced button for interactive animations
 export interface MotionButtonProps
-  extends Omit<HTMLMotionProps<'button'>, 'ref'>,
+  extends Omit<HTMLMotionProps<'button'>, 'ref' | 'children'>,
     VariantProps<typeof buttonVariants> {
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const MotionButton = React.forwardRef<HTMLButtonElement, MotionButtonProps>(

@@ -65,9 +65,11 @@ func main() {
 
 	// Initialize services
 	authService := services.NewAuthService(cfg, userRepo, sessionRepo, roleRepo)
+	mfaService := services.NewMFAService(userRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
+	mfaHandler := handlers.NewMFAHandler(mfaService, authService)
 	healthHandler := handlers.NewHealthHandler(db)
 
 	// Setup router
@@ -130,6 +132,14 @@ func main() {
 		otp.POST("/verify", authHandler.VerifyOTP)
 	}
 
+	// MFA verification endpoints (public - used during login flow)
+	mfa := router.Group("/api/v1/auth/mfa")
+	mfa.Use(authRateLimiter.Middleware())
+	{
+		mfa.POST("/verify", mfaHandler.VerifyMFA)
+		mfa.POST("/verify-backup", mfaHandler.VerifyBackupCode)
+	}
+
 	// Protected auth endpoints
 	jwtConfig := middleware.JWTConfig{
 		Secret:    cfg.JWT.Secret,
@@ -144,6 +154,16 @@ func main() {
 		protected.PUT("/me", authHandler.UpdateProfile)
 		protected.POST("/logout", authHandler.Logout)
 		protected.POST("/change-password", authHandler.ChangePassword)
+
+		// MFA management (requires authentication)
+		mfaGroup := protected.Group("/mfa")
+		{
+			mfaGroup.POST("/setup", mfaHandler.SetupMFA)
+			mfaGroup.POST("/verify-setup", mfaHandler.VerifyMFASetup)
+			mfaGroup.POST("/disable", mfaHandler.DisableMFA)
+			mfaGroup.POST("/backup-codes", mfaHandler.GetBackupCodes)
+			mfaGroup.POST("/regenerate-backup-codes", mfaHandler.RegenerateBackupCodes)
+		}
 	}
 
 	// Admin endpoints

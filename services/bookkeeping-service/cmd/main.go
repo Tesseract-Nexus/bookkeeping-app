@@ -56,6 +56,9 @@ func main() {
 		&models.Transaction{},
 		&models.TransactionLine{},
 		&models.BankTransaction{},
+		&models.RecurringJournal{},
+		&models.RecurringJournalLine{},
+		&models.GeneratedJournal{},
 	); err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
@@ -64,16 +67,19 @@ func main() {
 	accountRepo := repository.NewAccountRepository(db)
 	transactionRepo := repository.NewTransactionRepository(db)
 	bankRepo := repository.NewBankRepository(db)
+	recurringJournalRepo := repository.NewRecurringJournalRepository(db)
 
 	// Initialize services
 	accountService := services.NewAccountService(accountRepo)
 	transactionService := services.NewTransactionService(transactionRepo, accountRepo)
 	bankService := services.NewBankService(bankRepo, transactionRepo)
+	recurringJournalService := services.NewRecurringJournalService(recurringJournalRepo, transactionService)
 
 	// Initialize handlers
 	accountHandler := handlers.NewAccountHandler(accountService)
 	transactionHandler := handlers.NewTransactionHandler(transactionService)
 	bankHandler := handlers.NewBankHandler(bankService)
+	recurringJournalHandler := handlers.NewRecurringJournalHandler(recurringJournalService)
 	healthHandler := handlers.NewHealthHandler(db)
 
 	// Setup router
@@ -154,6 +160,20 @@ func main() {
 			bank.POST("/transactions/:tx_id/reconcile", bankHandler.ReconcileTransaction)
 			bank.POST("/transactions/:tx_id/unreconcile", bankHandler.UnreconcileTransaction)
 			bank.GET("/transactions/:tx_id/suggest-matches", bankHandler.SuggestMatches)
+		}
+
+		// Recurring Journal Entries
+		recurring := api.Group("/recurring-journals")
+		{
+			recurring.GET("", recurringJournalHandler.List)
+			recurring.POST("", recurringJournalHandler.Create)
+			recurring.GET("/:id", recurringJournalHandler.Get)
+			recurring.PUT("/:id", recurringJournalHandler.Update)
+			recurring.DELETE("/:id", recurringJournalHandler.Delete)
+			recurring.POST("/:id/pause", recurringJournalHandler.Pause)
+			recurring.POST("/:id/resume", recurringJournalHandler.Resume)
+			recurring.POST("/:id/generate", recurringJournalHandler.GenerateNow)
+			recurring.GET("/:id/history", recurringJournalHandler.GetHistory)
 		}
 	}
 

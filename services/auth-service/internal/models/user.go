@@ -21,10 +21,32 @@ type User struct {
 	EmailVerifiedAt   *time.Time     `json:"email_verified_at,omitempty"`
 	LastLoginAt       *time.Time     `json:"last_login_at,omitempty"`
 	PasswordChangedAt *time.Time     `json:"password_changed_at,omitempty"`
-	Roles             []Role         `gorm:"many2many:user_roles;" json:"roles"`
-	CreatedAt         time.Time      `json:"created_at"`
-	UpdatedAt         time.Time      `json:"updated_at"`
-	DeletedAt         gorm.DeletedAt `gorm:"index" json:"-"`
+	// MFA fields
+	MFAEnabled     bool       `gorm:"default:false" json:"mfa_enabled"`
+	MFASecret      string     `gorm:"size:255" json:"-"`
+	MFABackupCodes string     `gorm:"type:text" json:"-"` // JSON array of backup codes
+	MFAVerifiedAt  *time.Time `json:"mfa_verified_at,omitempty"`
+	// Account lockout
+	FailedLoginAttempts int        `gorm:"default:0" json:"-"`
+	LockedUntil         *time.Time `json:"locked_until,omitempty"`
+	// Password reset
+	ResetToken          string     `gorm:"size:255" json:"-"`
+	ResetTokenExpiresAt *time.Time `json:"-"`
+	// Email verification
+	VerificationToken          string     `gorm:"size:255" json:"-"`
+	VerificationTokenExpiresAt *time.Time `json:"-"`
+	Roles                      []Role     `gorm:"many2many:user_roles;" json:"roles"`
+	CreatedAt                  time.Time  `json:"created_at"`
+	UpdatedAt                  time.Time  `json:"updated_at"`
+	DeletedAt                  gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+// IsLocked checks if the user account is locked
+func (u *User) IsLocked() bool {
+	if u.LockedUntil == nil {
+		return false
+	}
+	return time.Now().Before(*u.LockedUntil)
 }
 
 // TableName returns the table name for User

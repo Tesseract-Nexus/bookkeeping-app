@@ -61,6 +61,13 @@ func main() {
 		&models.Bill{},
 		&models.BillItem{},
 		&models.BillPayment{},
+		&models.Product{},
+		&models.CreditNote{},
+		&models.CreditNoteItem{},
+		&models.CreditNoteApplication{},
+		&models.RecurringInvoice{},
+		&models.RecurringInvoiceItem{},
+		&models.GeneratedInvoice{},
 	); err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
@@ -70,14 +77,20 @@ func main() {
 	paymentRepo := repository.NewPaymentRepository(db)
 	billRepo := repository.NewBillRepository(db)
 	billPaymentRepo := repository.NewBillPaymentRepository(db)
+	productRepo := repository.NewProductRepository(db)
+	recurringInvoiceRepo := repository.NewRecurringInvoiceRepository(db)
 
 	// Initialize services
 	invoiceService := services.NewInvoiceService(invoiceRepo, paymentRepo)
 	billService := services.NewBillService(billRepo, billPaymentRepo)
+	productService := services.NewProductService(productRepo)
+	recurringInvoiceService := services.NewRecurringInvoiceService(recurringInvoiceRepo, invoiceRepo, invoiceService)
 
 	// Initialize handlers
 	invoiceHandler := handlers.NewInvoiceHandler(invoiceService)
 	billHandler := handlers.NewBillHandler(billService)
+	productHandler := handlers.NewProductHandler(productService)
+	recurringInvoiceHandler := handlers.NewRecurringInvoiceHandler(recurringInvoiceService)
 	healthHandler := handlers.NewHealthHandler(db)
 
 	// Setup router
@@ -151,6 +164,34 @@ func main() {
 			bills.DELETE("/:id", billHandler.Delete)
 			bills.POST("/:id/approve", billHandler.Approve)
 			bills.POST("/:id/payments", billHandler.RecordPayment)
+		}
+
+		// Product/Service catalog endpoints
+		products := api.Group("/products")
+		{
+			products.GET("", productHandler.List)
+			products.POST("", productHandler.Create)
+			products.GET("/categories", productHandler.GetCategories)
+			products.GET("/units", productHandler.GetUnitsOfMeasure)
+			products.POST("/import", productHandler.Import)
+			products.GET("/:id", productHandler.Get)
+			products.PUT("/:id", productHandler.Update)
+			products.DELETE("/:id", productHandler.Delete)
+			products.POST("/:id/stock", productHandler.UpdateStock)
+		}
+
+		// Recurring Invoice endpoints
+		recurring := api.Group("/recurring-invoices")
+		{
+			recurring.GET("", recurringInvoiceHandler.List)
+			recurring.POST("", recurringInvoiceHandler.Create)
+			recurring.GET("/:id", recurringInvoiceHandler.Get)
+			recurring.PUT("/:id", recurringInvoiceHandler.Update)
+			recurring.DELETE("/:id", recurringInvoiceHandler.Delete)
+			recurring.POST("/:id/pause", recurringInvoiceHandler.Pause)
+			recurring.POST("/:id/resume", recurringInvoiceHandler.Resume)
+			recurring.POST("/:id/generate", recurringInvoiceHandler.GenerateNow)
+			recurring.GET("/:id/history", recurringInvoiceHandler.GetHistory)
 		}
 	}
 

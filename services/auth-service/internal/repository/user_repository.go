@@ -13,6 +13,9 @@ type UserRepository interface {
 	Create(ctx context.Context, user *models.User) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	GetByPhone(ctx context.Context, phone string) (*models.User, error)
+	GetByResetToken(ctx context.Context, token string) (*models.User, error)
+	GetByVerificationToken(ctx context.Context, token string) (*models.User, error)
 	GetByTenantID(ctx context.Context, tenantID uuid.UUID, page, limit int) ([]models.User, int64, error)
 	Update(ctx context.Context, user *models.User) error
 	Delete(ctx context.Context, id uuid.UUID) error
@@ -51,6 +54,39 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 	err := r.db.WithContext(ctx).
 		Preload("Roles").
 		First(&user, "email = ?", email).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *userRepository) GetByPhone(ctx context.Context, phone string) (*models.User, error) {
+	var user models.User
+	err := r.db.WithContext(ctx).
+		Preload("Roles").
+		First(&user, "phone = ?", phone).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *userRepository) GetByResetToken(ctx context.Context, token string) (*models.User, error) {
+	var user models.User
+	err := r.db.WithContext(ctx).
+		Preload("Roles").
+		First(&user, "reset_token = ?", token).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *userRepository) GetByVerificationToken(ctx context.Context, token string) (*models.User, error) {
+	var user models.User
+	err := r.db.WithContext(ctx).
+		Preload("Roles").
+		First(&user, "verification_token = ?", token).Error
 	if err != nil {
 		return nil, err
 	}

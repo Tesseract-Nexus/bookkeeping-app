@@ -89,14 +89,17 @@ func main() {
 
 	api := router.Group("/api/v1")
 	api.Use(middleware.AuthMiddleware(jwtConfig))
+	api.Use(middleware.TenantMiddleware())
 	{
 		reports := api.Group("/reports")
 		{
 			reports.GET("/dashboard", reportHandler.GetDashboard)
 			reports.GET("/profit-loss", reportHandler.GetProfitLoss)
 			reports.GET("/balance-sheet", reportHandler.GetBalanceSheet)
+			reports.GET("/trial-balance", reportHandler.GetTrialBalance)
 			reports.GET("/gst-summary", reportHandler.GetGSTSummary)
 			reports.GET("/receivables-aging", reportHandler.GetReceivablesAging)
+			reports.GET("/payables-aging", reportHandler.GetPayablesAging)
 			reports.GET("/cash-flow", reportHandler.GetCashFlow)
 		}
 	}

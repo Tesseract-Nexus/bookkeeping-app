@@ -208,6 +208,53 @@ func (h *ReportHandler) GetCashFlow(c *gin.Context) {
 	response.Success(c, report)
 }
 
+// GetPayablesAging handles payables aging report request (AP Aging)
+func (h *ReportHandler) GetPayablesAging(c *gin.Context) {
+	tenantID, err := h.getTenantIDFromContext(c)
+	if err != nil {
+		response.BadRequest(c, "Tenant ID required", nil)
+		return
+	}
+
+	report, err := h.reportService.GetPayablesAging(c.Request.Context(), tenantID)
+	if err != nil {
+		response.InternalError(c, "Failed to generate payables aging report")
+		return
+	}
+
+	response.Success(c, report)
+}
+
+// GetTrialBalance handles trial balance report request
+func (h *ReportHandler) GetTrialBalance(c *gin.Context) {
+	tenantID, err := h.getTenantIDFromContext(c)
+	if err != nil {
+		response.BadRequest(c, "Tenant ID required", nil)
+		return
+	}
+
+	asOfDateStr := c.Query("as_of")
+	var asOfDate time.Time
+
+	if asOfDateStr == "" {
+		asOfDate = time.Now()
+	} else {
+		asOfDate, err = time.Parse("2006-01-02", asOfDateStr)
+		if err != nil {
+			response.BadRequest(c, "Invalid as_of date format", nil)
+			return
+		}
+	}
+
+	report, err := h.reportService.GetTrialBalance(c.Request.Context(), tenantID, asOfDate)
+	if err != nil {
+		response.InternalError(c, "Failed to generate trial balance report")
+		return
+	}
+
+	response.Success(c, report)
+}
+
 // Helper methods
 
 func (h *ReportHandler) getTenantIDFromContext(c *gin.Context) (uuid.UUID, error) {

@@ -16,7 +16,9 @@ type ReportService interface {
 	GetBalanceSheet(ctx context.Context, tenantID uuid.UUID, asOfDate time.Time) (*models.BalanceSheet, error)
 	GetGSTSummary(ctx context.Context, tenantID uuid.UUID, month, year int) (*models.GSTSummary, error)
 	GetReceivablesAging(ctx context.Context, tenantID uuid.UUID) (*models.ReceivablesAgingReport, error)
+	GetPayablesAging(ctx context.Context, tenantID uuid.UUID) (*models.PayablesAgingReport, error)
 	GetCashFlow(ctx context.Context, tenantID uuid.UUID, fromDate, toDate time.Time) (*models.CashFlowReport, error)
+	GetTrialBalance(ctx context.Context, tenantID uuid.UUID, asOfDate time.Time) (*models.TrialBalanceReport, error)
 }
 
 type reportService struct {
@@ -493,6 +495,165 @@ func (s *reportService) GetCashFlow(ctx context.Context, tenantID uuid.UUID, fro
 
 	// Closing balance
 	report.ClosingBalance = report.OpeningBalance + report.NetCashFlow
+
+	return report, nil
+}
+
+func (s *reportService) GetPayablesAging(ctx context.Context, tenantID uuid.UUID) (*models.PayablesAgingReport, error) {
+	today := time.Now()
+	report := &models.PayablesAgingReport{}
+
+	// Query bills with outstanding balances and calculate aging buckets
+	type agingRow struct {
+		VendorID   uuid.UUID
+		VendorName string
+		DueDate    time.Time
+		Balance    float64
+	}
+
+	var rows []agingRow
+	s.db.WithContext(ctx).Raw(`
+		SELECT
+			vendor_id,
+			vendor_name,
+			due_date,
+			(total_amount - COALESCE(amount_paid, 0)) as balance
+		FROM bills
+		WHERE tenant_id = ?
+		AND status NOT IN ('paid', 'cancelled', 'voided')
+		AND (total_amount - COALESCE(amount_paid, 0)) > 0
+		AND deleted_at IS NULL
+	`, tenantID).Scan(&rows)
+
+	// Group by vendor and calculate aging buckets
+	vendorMap := make(map[uuid.UUID]*models.VendorAging)
+	summary := models.AgingSummary{}
+
+	for _, row := range rows {
+		daysOverdue := int(today.Sub(row.DueDate).Hours() / 24)
+
+		if _, exists := vendorMap[row.VendorID]; !exists {
+			vendorMap[row.VendorID] = &models.VendorAging{
+				VendorID:   row.VendorID,
+				VendorName: row.VendorName,
+			}
+		}
+
+		vendor := vendorMap[row.VendorID]
+
+		switch {
+		case daysOverdue <= 0:
+			vendor.Current += row.Balance
+			summary.Current += row.Balance
+		case daysOverdue <= 30:
+			vendor.Days1To30 += row.Balance
+			summary.Days1To30 += row.Balance
+		case daysOverdue <= 60:
+			vendor.Days31To60 += row.Balance
+			summary.Days31To60 += row.Balance
+		case daysOverdue <= 90:
+			vendor.Days61To90 += row.Balance
+			summary.Days61To90 += row.Balance
+		default:
+			vendor.Over90Days += row.Balance
+			summary.Over90Days += row.Balance
+		}
+
+		vendor.Total += row.Balance
+		summary.Total += row.Balance
+	}
+
+	// Convert map to slice
+	for _, vendor := range vendorMap {
+		report.ByVendor = append(report.ByVendor, *vendor)
+	}
+
+	report.Summary = summary
+	return report, nil
+}
+
+func (s *reportService) GetTrialBalance(ctx context.Context, tenantID uuid.UUID, asOfDate time.Time) (*models.TrialBalanceReport, error) {
+	report := &models.TrialBalanceReport{
+		AsOfDate: asOfDate,
+	}
+
+	asOfStr := asOfDate.Format("2006-01-02")
+
+	// Get all accounts with their balances as of the specified date
+	type accountRow struct {
+		ID             uuid.UUID
+		Code           string
+		Name           string
+		Type           string
+		NormalBalance  string
+		OpeningBalance float64
+		DebitMovements float64
+		CreditMovements float64
+	}
+
+	var rows []accountRow
+	s.db.WithContext(ctx).Raw(`
+		SELECT
+			a.id,
+			a.code,
+			a.name,
+			a.type,
+			a.normal_balance,
+			COALESCE(a.opening_balance, 0) as opening_balance,
+			COALESCE(SUM(tl.debit_amount), 0) as debit_movements,
+			COALESCE(SUM(tl.credit_amount), 0) as credit_movements
+		FROM accounts a
+		LEFT JOIN transaction_lines tl ON tl.account_id = a.id
+		LEFT JOIN transactions t ON t.id = tl.transaction_id
+			AND t.transaction_date <= ?
+			AND t.status = 'posted'
+			AND t.deleted_at IS NULL
+		WHERE a.tenant_id = ? AND a.deleted_at IS NULL
+		GROUP BY a.id, a.code, a.name, a.type, a.normal_balance, a.opening_balance
+		ORDER BY a.code
+	`, asOfStr, tenantID).Scan(&rows)
+
+	var totalDebit, totalCredit float64
+
+	for _, row := range rows {
+		entry := models.TrialBalanceEntry{
+			AccountID:   row.ID,
+			AccountCode: row.Code,
+			AccountName: row.Name,
+			AccountType: row.Type,
+		}
+
+		// Calculate net balance
+		netBalance := row.OpeningBalance + row.DebitMovements - row.CreditMovements
+
+		// Assign to debit or credit column based on normal balance and net amount
+		if row.NormalBalance == "debit" {
+			if netBalance >= 0 {
+				entry.DebitBalance = netBalance
+			} else {
+				entry.CreditBalance = -netBalance
+			}
+		} else {
+			// Credit normal balance
+			netBalance = row.OpeningBalance + row.CreditMovements - row.DebitMovements
+			if netBalance >= 0 {
+				entry.CreditBalance = netBalance
+			} else {
+				entry.DebitBalance = -netBalance
+			}
+		}
+
+		totalDebit += entry.DebitBalance
+		totalCredit += entry.CreditBalance
+
+		// Only include accounts with non-zero balances
+		if entry.DebitBalance != 0 || entry.CreditBalance != 0 {
+			report.Accounts = append(report.Accounts, entry)
+		}
+	}
+
+	report.TotalDebit = totalDebit
+	report.TotalCredit = totalCredit
 
 	return report, nil
 }

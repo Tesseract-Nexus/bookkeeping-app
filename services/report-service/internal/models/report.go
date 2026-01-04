@@ -223,3 +223,39 @@ type CashFlowSection struct {
 	Outflow float64 `json:"outflow"`
 	Net     float64 `json:"net"`
 }
+
+// PayablesAgingReport represents payables aging report (AP Aging)
+type PayablesAgingReport struct {
+	Summary  AgingSummary    `json:"summary"`
+	ByVendor []VendorAging   `json:"by_vendor"`
+}
+
+// VendorAging represents aging for a single vendor
+type VendorAging struct {
+	VendorID   uuid.UUID `json:"vendor_id"`
+	VendorName string    `json:"vendor_name"`
+	Current    float64   `json:"current"`
+	Days1To30  float64   `json:"1_30_days"`
+	Days31To60 float64   `json:"31_60_days"`
+	Days61To90 float64   `json:"61_90_days"`
+	Over90Days float64   `json:"over_90_days"`
+	Total      float64   `json:"total"`
+}
+
+// TrialBalanceReport represents a trial balance report
+type TrialBalanceReport struct {
+	AsOfDate   time.Time           `json:"as_of_date"`
+	Accounts   []TrialBalanceEntry `json:"accounts"`
+	TotalDebit  float64            `json:"total_debit"`
+	TotalCredit float64            `json:"total_credit"`
+}
+
+// TrialBalanceEntry represents a single account entry in trial balance
+type TrialBalanceEntry struct {
+	AccountID     uuid.UUID `json:"account_id"`
+	AccountCode   string    `json:"account_code"`
+	AccountName   string    `json:"account_name"`
+	AccountType   string    `json:"account_type"`
+	DebitBalance  float64   `json:"debit_balance"`
+	CreditBalance float64   `json:"credit_balance"`
+}

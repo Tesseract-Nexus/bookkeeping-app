@@ -3,8 +3,11 @@ package services
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -16,12 +19,26 @@ import (
 )
 
 var (
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrUserNotFound       = errors.New("user not found")
-	ErrUserExists         = errors.New("user already exists")
-	ErrInvalidToken       = errors.New("invalid token")
-	ErrTokenExpired       = errors.New("token expired")
-	ErrSessionNotFound    = errors.New("session not found")
+	ErrInvalidCredentials      = errors.New("invalid credentials")
+	ErrUserNotFound            = errors.New("user not found")
+	ErrUserExists              = errors.New("user already exists")
+	ErrInvalidToken            = errors.New("invalid token")
+	ErrTokenExpired            = errors.New("token expired")
+	ErrSessionNotFound         = errors.New("session not found")
+	ErrAccountLocked           = errors.New("account is locked due to too many failed attempts")
+	ErrEmailNotVerified        = errors.New("email not verified")
+	ErrMFARequired             = errors.New("MFA verification required")
+	ErrInvalidResetToken       = errors.New("invalid or expired reset token")
+	ErrInvalidVerificationCode = errors.New("invalid or expired verification code")
+	ErrPasswordReused          = errors.New("cannot reuse a recent password")
+)
+
+const (
+	ResetTokenExpiry        = 1 * time.Hour
+	VerificationCodeExpiry  = 10 * time.Minute
+	MaxFailedLoginAttempts  = 5
+	AccountLockoutDuration  = 15 * time.Minute
+	VerificationCodeLength  = 6
 )
 
 // AuthService handles authentication business logic
@@ -239,28 +256,204 @@ func (s *authService) ChangePassword(ctx context.Context, userID uuid.UUID, req 
 }
 
 func (s *authService) ForgotPassword(ctx context.Context, email string) error {
-	// TODO: Implement password reset token generation and email sending
+	user, err := s.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		// Don't reveal if user exists - always return success
+		return nil
+	}
+
+	// Generate a secure reset token
+	token, err := generateSecureToken(32)
+	if err != nil {
+		return err
+	}
+
+	// Hash the token for storage (we'll send the plain token via email)
+	hashedToken := hashToken(token)
+
+	// Set expiry
+	expiresAt := time.Now().Add(ResetTokenExpiry)
+	user.ResetToken = hashedToken
+	user.ResetTokenExpiresAt = &expiresAt
+
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		return err
+	}
+
+	// TODO: Send email with reset link containing the token
+	// The reset link should be: {frontend_url}/reset-password?token={token}
+	// For now, we log it (in production, use an email service)
+	fmt.Printf("[Password Reset] Token for %s: %s\n", email, token)
+
 	return nil
 }
 
 func (s *authService) ResetPassword(ctx context.Context, token, newPassword string) error {
-	// TODO: Implement password reset
+	// Hash the token to compare with stored hash
+	hashedToken := hashToken(token)
+
+	// Find user by reset token
+	user, err := s.userRepo.GetByResetToken(ctx, hashedToken)
+	if err != nil {
+		return ErrInvalidResetToken
+	}
+
+	// Check if token is expired
+	if user.ResetTokenExpiresAt == nil || time.Now().After(*user.ResetTokenExpiresAt) {
+		return ErrInvalidResetToken
+	}
+
+	// Hash new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	// Update password and clear reset token
+	user.PasswordHash = string(hashedPassword)
+	user.ResetToken = ""
+	user.ResetTokenExpiresAt = nil
+	now := time.Now()
+	user.PasswordChangedAt = &now
+
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		return err
+	}
+
+	// Invalidate all sessions on password reset
+	_ = s.sessionRepo.DeleteByUserID(ctx, user.ID)
+
 	return nil
 }
 
-func (s *authService) VerifyEmail(ctx context.Context, token string) error {
-	// TODO: Implement email verification
-	return nil
+func (s *authService) VerifyEmail(ctx context.Context, code string) error {
+	// Find user by verification token/code
+	user, err := s.userRepo.GetByVerificationToken(ctx, code)
+	if err != nil {
+		return ErrInvalidVerificationCode
+	}
+
+	// Check if token is expired
+	if user.VerificationTokenExpiresAt == nil || time.Now().After(*user.VerificationTokenExpiresAt) {
+		return ErrInvalidVerificationCode
+	}
+
+	// Mark email as verified
+	now := time.Now()
+	user.IsEmailVerified = true
+	user.EmailVerifiedAt = &now
+	user.VerificationToken = ""
+	user.VerificationTokenExpiresAt = nil
+
+	return s.userRepo.Update(ctx, user)
+}
+
+// SendVerificationEmail generates and stores a verification code, then sends it
+func (s *authService) SendVerificationEmail(ctx context.Context, userID uuid.UUID) (string, error) {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return "", ErrUserNotFound
+	}
+
+	if user.IsEmailVerified {
+		return "", nil // Already verified
+	}
+
+	// Generate a 6-digit verification code
+	code := generateVerificationCode(VerificationCodeLength)
+
+	// Set expiry
+	expiresAt := time.Now().Add(VerificationCodeExpiry)
+	user.VerificationToken = code
+	user.VerificationTokenExpiresAt = &expiresAt
+
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		return "", err
+	}
+
+	// TODO: Send email with verification code
+	// For now, we log it (in production, use an email service)
+	fmt.Printf("[Email Verification] Code for %s: %s\n", user.Email, code)
+
+	return code, nil
 }
 
 func (s *authService) RequestOTP(ctx context.Context, phone string) error {
-	// TODO: Implement OTP sending via SMS
+	user, err := s.userRepo.GetByPhone(ctx, phone)
+	if err != nil {
+		// Don't reveal if user exists
+		return nil
+	}
+
+	// Generate a 6-digit OTP
+	otp := generateVerificationCode(6)
+
+	// Store OTP in verification token field temporarily
+	expiresAt := time.Now().Add(VerificationCodeExpiry)
+	user.VerificationToken = otp
+	user.VerificationTokenExpiresAt = &expiresAt
+
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		return err
+	}
+
+	// TODO: Send OTP via SMS service
+	fmt.Printf("[OTP] Code for %s: %s\n", phone, otp)
+
 	return nil
 }
 
 func (s *authService) VerifyOTP(ctx context.Context, phone, otp string) (*AuthResponse, error) {
-	// TODO: Implement OTP verification
-	return nil, nil
+	user, err := s.userRepo.GetByPhone(ctx, phone)
+	if err != nil {
+		return nil, ErrInvalidCredentials
+	}
+
+	// Verify OTP
+	if user.VerificationToken != otp {
+		return nil, ErrInvalidVerificationCode
+	}
+
+	// Check expiry
+	if user.VerificationTokenExpiresAt == nil || time.Now().After(*user.VerificationTokenExpiresAt) {
+		return nil, ErrInvalidVerificationCode
+	}
+
+	// Clear the OTP
+	user.VerificationToken = ""
+	user.VerificationTokenExpiresAt = nil
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	// Generate auth tokens
+	return s.generateAuthResponse(ctx, user)
+}
+
+// Helper functions
+
+func generateSecureToken(length int) (string, error) {
+	bytes := make([]byte, length)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(bytes), nil
+}
+
+func hashToken(token string) string {
+	hash := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(hash[:])
+}
+
+func generateVerificationCode(length int) string {
+	const digits = "0123456789"
+	code := make([]byte, length)
+	for i := range code {
+		b := make([]byte, 1)
+		rand.Read(b)
+		code[i] = digits[int(b[0])%len(digits)]
+	}
+	return string(code)
 }
 
 func (s *authService) ListUsers(ctx context.Context, tenantID uuid.UUID, page, limit int) ([]models.User, int64, error) {

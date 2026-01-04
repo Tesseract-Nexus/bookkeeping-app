@@ -20,25 +20,6 @@
 
 ---
 
-## Technology Stack
-
-| Layer | Technology | Version |
-|-------|------------|---------|
-| Frontend | React.js with TypeScript | 18.x / 5.x |
-| UI Framework | Tailwind CSS + shadcn/ui | 3.x / Latest |
-| State Management | Redux Toolkit + RTK Query | 2.x |
-| Backend | Node.js with NestJS | 20.x LTS / 10.x |
-| Database | PostgreSQL | 16.x |
-| ORM | Prisma | 5.x |
-| Cache | Redis | 7.x |
-| Authentication | JWT + Passport.js | Latest |
-| API Documentation | Swagger/OpenAPI | 3.0 |
-| Testing | Jest + Cypress | 29.x / 13.x |
-| Cloud | AWS (Mumbai + Sydney) | - |
-| Container | Docker + Kubernetes | Latest |
-
----
-
 # SPRINT 1: Foundation & Authentication
 
 **Duration: 4 Weeks | Story Points: 120**

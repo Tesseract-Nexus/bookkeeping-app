@@ -22,6 +22,7 @@ import {
   BookOpen,
   Building,
   CreditCard,
+  TrendingDown,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
@@ -51,6 +52,11 @@ const mainNavItems = [
     title: 'Bills',
     href: '/bills',
     icon: CreditCard,
+  },
+  {
+    title: 'Expenses',
+    href: '/expenses',
+    icon: TrendingDown,
   },
   {
     title: 'Customers',

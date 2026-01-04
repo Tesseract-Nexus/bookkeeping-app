@@ -18,6 +18,9 @@ import {
   LogOut,
   Moon,
   Sun,
+  Wallet,
+  BookOpen,
+  Building,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
@@ -49,9 +52,24 @@ const mainNavItems = [
     icon: Users,
   },
   {
-    title: 'Expenses',
-    href: '/expenses',
+    title: 'Vendors',
+    href: '/vendors',
+    icon: Building,
+  },
+  {
+    title: 'Accounts',
+    href: '/accounts',
+    icon: BookOpen,
+  },
+  {
+    title: 'Journal',
+    href: '/journal',
     icon: Receipt,
+  },
+  {
+    title: 'Banking',
+    href: '/banking',
+    icon: Wallet,
   },
   {
     title: 'Tax & GST',

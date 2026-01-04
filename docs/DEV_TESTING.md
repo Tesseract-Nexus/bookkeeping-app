@@ -1,5 +1,12 @@
 # Development Testing Guide
 
+## Production/Staging URLs
+
+| Environment | URL |
+|-------------|-----|
+| Development | https://dev-bookkeeping.tesserix.app |
+| Login Page  | https://dev-bookkeeping.tesserix.app/login |
+
 ## Test Credentials
 
 Use the following credentials for development and testing:

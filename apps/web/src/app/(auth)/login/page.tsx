@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail, ArrowRight } from 'lucide-react';
 import { Button, MotionButton } from '@/components/ui/button';
 import { Input, PasswordInput } from '@/components/ui/input';
@@ -9,16 +10,48 @@ import { LabeledCheckbox } from '@/components/ui/checkbox';
 import { LabeledSeparator } from '@/components/ui/separator';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = React.useState(false);
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1500));
-    setIsLoading(false);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error?.message || 'Invalid email or password');
+        setIsLoading(false);
+        return;
+      }
+
+      // Store access token in cookie (for client-side access)
+      if (data.data?.access_token) {
+        document.cookie = `access_token=${data.data.access_token}; path=/; max-age=${data.data.expires_in || 900}; samesite=lax${window.location.protocol === 'https:' ? '; secure' : ''}`;
+      }
+
+      // Redirect to the original page or dashboard
+      const redirectTo = searchParams.get('redirect') || '/dashboard';
+      router.push(redirectTo);
+      router.refresh();
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -65,6 +98,13 @@ export default function LoginPage() {
       </div>
 
       <LabeledSeparator label="or continue with email" />
+
+      {/* Error message */}
+      {error && (
+        <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg animate-fade-in">
+          {error}
+        </div>
+      )}
 
       {/* Login form */}
       <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in-up animation-delay-200">

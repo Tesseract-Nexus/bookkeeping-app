@@ -27,6 +27,8 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    # golangci-lint v1.64.8 doesn't support Go 1.25 yet
+    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

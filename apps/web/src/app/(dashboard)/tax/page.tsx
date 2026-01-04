@@ -14,6 +14,7 @@ import {
   CheckCircle,
   Clock,
   ArrowRight,
+  Truck,
 } from 'lucide-react';
 import { Button, MotionButton } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
@@ -75,6 +76,14 @@ const taxModules: TaxCard[] = [
     icon: FileText,
     href: '/tax/e-invoice',
     color: 'bg-indigo-100 text-indigo-600',
+  },
+  {
+    id: 'eway-bill',
+    title: 'E-Way Bill',
+    description: 'Generate E-Way Bills for goods movement',
+    icon: Truck,
+    href: '/tax/eway-bill',
+    color: 'bg-teal-100 text-teal-600',
   },
 ];
 

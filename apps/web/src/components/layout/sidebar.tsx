@@ -21,6 +21,7 @@ import {
   Wallet,
   BookOpen,
   Building,
+  CreditCard,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
@@ -45,6 +46,11 @@ const mainNavItems = [
     title: 'Invoices',
     href: '/invoices',
     icon: FileText,
+  },
+  {
+    title: 'Bills',
+    href: '/bills',
+    icon: CreditCard,
   },
   {
     title: 'Customers',

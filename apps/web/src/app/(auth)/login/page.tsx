@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail, ArrowRight } from 'lucide-react';
@@ -9,7 +10,7 @@ import { Input, PasswordInput } from '@/components/ui/input';
 import { LabeledCheckbox } from '@/components/ui/checkbox';
 import { LabeledSeparator } from '@/components/ui/separator';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = React.useState(false);
@@ -166,5 +167,29 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+function LoginFormFallback() {
+  return (
+    <div className="space-y-6">
+      <div className="h-12 w-48 bg-muted animate-pulse rounded" />
+      <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="h-12 bg-muted animate-pulse rounded" />
+        <div className="h-12 bg-muted animate-pulse rounded" />
+      </div>
+      <div className="h-12 bg-muted animate-pulse rounded" />
+      <div className="h-12 bg-muted animate-pulse rounded" />
+      <div className="h-12 bg-muted animate-pulse rounded" />
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFormFallback />}>
+      <LoginForm />
+    </Suspense>
   );
 }

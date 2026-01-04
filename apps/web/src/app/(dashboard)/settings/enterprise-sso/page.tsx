@@ -282,7 +282,7 @@ export default function EnterpriseSSOPage() {
                 value={entraConfig.tenantId}
                 onChange={(e) => setEntraConfig({ ...entraConfig, tenantId: e.target.value })}
                 placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                helperText="Found in Azure Portal > Entra ID > Overview"
+                hint="Found in Azure Portal > Entra ID > Overview"
               />
 
               <Input
@@ -290,7 +290,7 @@ export default function EnterpriseSSOPage() {
                 value={entraConfig.clientId}
                 onChange={(e) => setEntraConfig({ ...entraConfig, clientId: e.target.value })}
                 placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                helperText="The Application ID from your registered app"
+                hint="The Application ID from your registered app"
               />
 
               <PasswordInput
@@ -298,7 +298,7 @@ export default function EnterpriseSSOPage() {
                 value={entraConfig.clientSecret}
                 onChange={(e) => setEntraConfig({ ...entraConfig, clientSecret: e.target.value })}
                 placeholder="Enter your client secret"
-                helperText="Create a new secret in Certificates & Secrets"
+                hint="Create a new secret in Certificates & Secrets"
               />
 
               <div className="p-4 bg-muted/50 rounded-lg">
@@ -333,7 +333,7 @@ export default function EnterpriseSSOPage() {
                 value={oktaConfig.domain}
                 onChange={(e) => setOktaConfig({ ...oktaConfig, domain: e.target.value })}
                 placeholder="your-company.okta.com"
-                helperText="Your Okta organization domain (without https://)"
+                hint="Your Okta organization domain (without https://)"
               />
 
               <Input
@@ -341,7 +341,7 @@ export default function EnterpriseSSOPage() {
                 value={oktaConfig.clientId}
                 onChange={(e) => setOktaConfig({ ...oktaConfig, clientId: e.target.value })}
                 placeholder="0oaxxxxxxxxxxxxxxxx"
-                helperText="Found in your Okta application settings"
+                hint="Found in your Okta application settings"
               />
 
               <PasswordInput
@@ -349,7 +349,7 @@ export default function EnterpriseSSOPage() {
                 value={oktaConfig.clientSecret}
                 onChange={(e) => setOktaConfig({ ...oktaConfig, clientSecret: e.target.value })}
                 placeholder="Enter your client secret"
-                helperText="The client secret from your Okta application"
+                hint="The client secret from your Okta application"
               />
 
               <Input
@@ -357,7 +357,7 @@ export default function EnterpriseSSOPage() {
                 value={oktaConfig.issuer}
                 onChange={(e) => setOktaConfig({ ...oktaConfig, issuer: e.target.value })}
                 placeholder="https://your-company.okta.com/oauth2/default"
-                helperText="Leave blank to use the default authorization server"
+                hint="Leave blank to use the default authorization server"
               />
 
               <div className="p-4 bg-muted/50 rounded-lg">

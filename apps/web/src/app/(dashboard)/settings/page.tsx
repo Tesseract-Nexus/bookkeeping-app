@@ -87,7 +87,7 @@ export default function ProfileSettingsPage() {
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           placeholder="you@example.com"
           disabled
-          helperText="Email cannot be changed"
+          hint="Email cannot be changed"
         />
 
         <Input

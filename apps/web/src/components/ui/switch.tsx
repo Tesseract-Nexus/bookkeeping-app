@@ -37,7 +37,8 @@ const LabeledSwitch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitive.Root>,
   LabeledSwitchProps
 >(({ label, description, position = 'left', className, id, ...props }, ref) => {
-  const switchId = id || React.useId();
+  const generatedId = React.useId();
+  const switchId = id || generatedId;
 
   const labelContent = (
     <div className="grid gap-0.5">

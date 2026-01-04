@@ -12,14 +12,30 @@ import (
 	"github.com/bookkeep/tenant-service/internal/repository"
 	"github.com/bookkeep/tenant-service/internal/services"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func main() {
 	// Load configuration
-	cfg := config.Load()
+	cfg, err := config.Load("tenant-service")
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
 
 	// Initialize database
-	db, err := database.NewConnection(cfg.DatabaseURL)
+	dbConfig := database.Config{
+		Host:            cfg.Database.Host,
+		Port:            cfg.Database.Port,
+		User:            cfg.Database.User,
+		Password:        cfg.Database.Password,
+		DBName:          cfg.Database.DBName,
+		SSLMode:         cfg.Database.SSLMode,
+		MaxOpenConns:    cfg.Database.MaxOpenConns,
+		MaxIdleConns:    cfg.Database.MaxIdleConns,
+		ConnMaxLifetime: cfg.Database.ConnMaxLifetime,
+		ConnMaxIdleTime: cfg.Database.ConnMaxIdleTime,
+	}
+	db, err := database.Connect(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -58,14 +74,21 @@ func main() {
 
 	// Apply global middleware
 	r.Use(middleware.CORS())
-	r.Use(middleware.RequestID())
-	r.Use(middleware.Logger())
-	r.Use(middleware.Recovery())
+	r.Use(middleware.RequestIDMiddleware())
+	r.Use(middleware.LoggerMiddleware())
+	r.Use(middleware.RecoveryMiddleware())
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "healthy", "service": "tenant-service"})
 	})
+
+	// JWT config for auth middleware
+	jwtConfig := middleware.JWTConfig{
+		Secret:    cfg.JWT.Secret,
+		Issuer:    cfg.JWT.Issuer,
+		SkipPaths: cfg.JWT.SkipPaths,
+	}
 
 	// Public routes
 	api := r.Group("/api/v1")
@@ -74,12 +97,12 @@ func main() {
 		api.GET("/permissions", tenantHandler.GetAllPermissions)
 
 		// Accept invitation (authenticated but no tenant required)
-		api.POST("/invitations/:token/accept", middleware.Auth(cfg.JWTSecret), tenantHandler.AcceptInvitation)
+		api.POST("/invitations/:token/accept", middleware.AuthMiddleware(jwtConfig), tenantHandler.AcceptInvitation)
 	}
 
 	// Authenticated routes
 	auth := api.Group("")
-	auth.Use(middleware.Auth(cfg.JWTSecret))
+	auth.Use(middleware.AuthMiddleware(jwtConfig))
 	{
 		// User's tenants
 		auth.GET("/tenants/me", tenantHandler.GetMyTenants)
@@ -90,7 +113,7 @@ func main() {
 
 	// Tenant-scoped routes (requires tenant membership)
 	tenant := api.Group("/tenants/:tenant_id")
-	tenant.Use(middleware.Auth(cfg.JWTSecret))
+	tenant.Use(middleware.AuthMiddleware(jwtConfig))
 	tenant.Use(TenantMiddleware(tenantRepo))
 	{
 		// Tenant management

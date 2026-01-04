@@ -40,7 +40,7 @@ func (h *TenantHandler) CreateTenant(c *gin.Context) {
 
 	var req services.CreateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ValidationError(c, err)
+		response.ValidationError(c, "Invalid request body", map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -53,7 +53,7 @@ func (h *TenantHandler) CreateTenant(c *gin.Context) {
 
 	tenant, err := h.tenantService.CreateTenant(c.Request.Context(), req, userID.(uuid.UUID), ownerInfo)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error(), nil)
 		return
 	}
 
@@ -76,11 +76,11 @@ func (h *TenantHandler) GetTenant(c *gin.Context) {
 			response.NotFound(c, "Tenant not found")
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.OK(c, tenant)
+	response.Success(c, tenant)
 }
 
 // UpdateTenant updates a tenant
@@ -97,17 +97,17 @@ func (h *TenantHandler) UpdateTenant(c *gin.Context) {
 
 	var req services.UpdateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ValidationError(c, err)
+		response.ValidationError(c, "Invalid request body", map[string]string{"error": err.Error()})
 		return
 	}
 
 	tenant, err := h.tenantService.UpdateTenant(c.Request.Context(), tenantID.(uuid.UUID), req)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error(), nil)
 		return
 	}
 
-	response.OK(c, tenant)
+	response.Success(c, tenant)
 }
 
 // DeleteTenant soft-deletes a tenant
@@ -120,7 +120,7 @@ func (h *TenantHandler) DeleteTenant(c *gin.Context) {
 	tenantID, _ := c.Get("tenant_id")
 
 	if err := h.tenantService.DeleteTenant(c.Request.Context(), tenantID.(uuid.UUID)); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error(), nil)
 		return
 	}
 
@@ -138,11 +138,11 @@ func (h *TenantHandler) GetMyTenants(c *gin.Context) {
 
 	tenants, err := h.tenantService.GetUserTenants(c.Request.Context(), userID.(uuid.UUID))
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.OK(c, tenants)
+	response.Success(c, tenants)
 }
 
 // Team Management
@@ -159,11 +159,11 @@ func (h *TenantHandler) ListMembers(c *gin.Context) {
 
 	members, err := h.tenantService.ListMembers(c.Request.Context(), tenantID.(uuid.UUID))
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.OK(c, members)
+	response.Success(c, members)
 }
 
 // InviteMember invites a new member to the tenant
@@ -181,13 +181,13 @@ func (h *TenantHandler) InviteMember(c *gin.Context) {
 
 	var req services.InviteMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ValidationError(c, err)
+		response.ValidationError(c, "Invalid request body", map[string]string{"error": err.Error()})
 		return
 	}
 
 	invitation, err := h.tenantService.InviteMember(c.Request.Context(), tenantID.(uuid.UUID), userID.(uuid.UUID), req)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error(), nil)
 		return
 	}
 
@@ -206,11 +206,11 @@ func (h *TenantHandler) ListInvitations(c *gin.Context) {
 
 	invitations, err := h.tenantService.ListInvitations(c.Request.Context(), tenantID.(uuid.UUID))
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.OK(c, invitations)
+	response.Success(c, invitations)
 }
 
 // AcceptInvitation accepts a pending invitation
@@ -236,11 +236,11 @@ func (h *TenantHandler) AcceptInvitation(c *gin.Context) {
 
 	member, err := h.tenantService.AcceptInvitation(c.Request.Context(), token, userID.(uuid.UUID), memberInfo)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error(), nil)
 		return
 	}
 
-	response.OK(c, member)
+	response.Success(c, member)
 }
 
 // CancelInvitation cancels a pending invitation
@@ -256,12 +256,12 @@ func (h *TenantHandler) CancelInvitation(c *gin.Context) {
 
 	invitationID, err := uuid.Parse(invitationIDStr)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid invitation ID")
+		response.BadRequest(c, "Invalid invitation ID", nil)
 		return
 	}
 
 	if err := h.tenantService.CancelInvitation(c.Request.Context(), tenantID.(uuid.UUID), invitationID); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error(), nil)
 		return
 	}
 
@@ -284,23 +284,23 @@ func (h *TenantHandler) UpdateMember(c *gin.Context) {
 
 	memberID, err := uuid.Parse(memberIDStr)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid member ID")
+		response.BadRequest(c, "Invalid member ID", nil)
 		return
 	}
 
 	var req services.UpdateMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ValidationError(c, err)
+		response.ValidationError(c, "Invalid request body", map[string]string{"error": err.Error()})
 		return
 	}
 
 	member, err := h.tenantService.UpdateMember(c.Request.Context(), tenantID.(uuid.UUID), memberID, req)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error(), nil)
 		return
 	}
 
-	response.OK(c, member)
+	response.Success(c, member)
 }
 
 // RemoveMember removes a member from the tenant
@@ -317,12 +317,12 @@ func (h *TenantHandler) RemoveMember(c *gin.Context) {
 
 	memberID, err := uuid.Parse(memberIDStr)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid member ID")
+		response.BadRequest(c, "Invalid member ID", nil)
 		return
 	}
 
 	if err := h.tenantService.RemoveMember(c.Request.Context(), tenantID.(uuid.UUID), memberID, userID.(uuid.UUID)); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.BadRequest(c, err.Error(), nil)
 		return
 	}
 
@@ -343,11 +343,11 @@ func (h *TenantHandler) ListRoles(c *gin.Context) {
 
 	roles, err := h.roleRepo.List(c.Request.Context(), tenantID.(uuid.UUID))
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.OK(c, roles)
+	response.Success(c, roles)
 }
 
 // GetAllPermissions returns all available permissions in the system
@@ -357,7 +357,7 @@ func (h *TenantHandler) ListRoles(c *gin.Context) {
 // @Success 200 {array} string
 // @Router /permissions [get]
 func (h *TenantHandler) GetAllPermissions(c *gin.Context) {
-	response.OK(c, models.AllPermissions())
+	response.Success(c, models.AllPermissions())
 }
 
 // GetMyPermissions returns the current user's permissions for the tenant
@@ -372,9 +372,9 @@ func (h *TenantHandler) GetMyPermissions(c *gin.Context) {
 
 	permissions, err := h.tenantService.GetUserPermissions(c.Request.Context(), tenantID.(uuid.UUID), userID.(uuid.UUID))
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.OK(c, permissions)
+	response.Success(c, permissions)
 }

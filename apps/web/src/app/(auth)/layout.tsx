@@ -52,8 +52,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           className="relative z-10 space-y-6"
         >
           <blockquote className="text-xl text-white/90 leading-relaxed">
-            "BookKeep has transformed how we manage our finances. GST compliance
-            has never been easier, and the invoicing system saves us hours every week."
+            &ldquo;BookKeep has transformed how we manage our finances. GST compliance
+            has never been easier, and the invoicing system saves us hours every week.&rdquo;
           </blockquote>
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">

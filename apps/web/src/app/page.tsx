@@ -286,7 +286,7 @@ export default function HomePage() {
                     <Star key={i} className="h-5 w-5 fill-warning text-warning" />
                   ))}
                 </div>
-                <blockquote className="text-lg mb-4">"{testimonial.quote}"</blockquote>
+                <blockquote className="text-lg mb-4">&ldquo;{testimonial.quote}&rdquo;</blockquote>
                 <div>
                   <div className="font-semibold">{testimonial.author}</div>
                   <div className="text-sm text-muted-foreground">{testimonial.role}</div>

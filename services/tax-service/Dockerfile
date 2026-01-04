@@ -6,19 +6,18 @@ WORKDIR /app
 # Install git and ca-certificates (for go mod download)
 RUN apk add --no-cache git ca-certificates
 
-# Copy go mod files
-COPY go.mod go.sum ./
-COPY packages/go-shared/go.mod packages/go-shared/
+# Copy go mod files from service directory
+COPY services/tax-service/go.mod services/tax-service/go.sum* ./services/tax-service/
+COPY packages/go-shared/ ./packages/go-shared/
 
 # Download dependencies
+WORKDIR /app/services/tax-service
 RUN go mod download
 
 # Copy source code
-COPY packages/go-shared/ packages/go-shared/
-COPY services/tax-service/ services/tax-service/
+COPY services/tax-service/ .
 
 # Build the application
-WORKDIR /app/services/tax-service
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /tax-service ./cmd
 
 # Final stage

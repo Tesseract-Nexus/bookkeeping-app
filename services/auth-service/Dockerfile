@@ -6,19 +6,18 @@ WORKDIR /app
 # Install git and ca-certificates (for go mod download)
 RUN apk add --no-cache git ca-certificates
 
-# Copy go mod files
-COPY go.mod go.sum ./
-COPY packages/go-shared/go.mod packages/go-shared/
+# Copy go mod files from service directory
+COPY services/auth-service/go.mod services/auth-service/go.sum* ./services/auth-service/
+COPY packages/go-shared/ ./packages/go-shared/
 
 # Download dependencies
+WORKDIR /app/services/auth-service
 RUN go mod download
 
 # Copy source code
-COPY packages/go-shared/ packages/go-shared/
-COPY services/auth-service/ services/auth-service/
+COPY services/auth-service/ .
 
 # Build the application
-WORKDIR /app/services/auth-service
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /auth-service ./cmd
 
 # Final stage

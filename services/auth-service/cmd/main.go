@@ -73,17 +73,46 @@ func main() {
 	// Setup router
 	router := gin.New()
 
+	// Allowed CORS origins
+	allowedOrigins := []string{
+		"https://app.bookkeep.in",
+		"https://www.bookkeep.in",
+		"https://bookkeep.in",
+	}
+	// Add development origins in non-production mode
+	if !cfg.IsProduction() {
+		allowedOrigins = append(allowedOrigins,
+			"http://localhost:3000",
+			"http://localhost:3001",
+			"exp://localhost:19000",
+		)
+	}
+
 	// Apply middleware
 	router.Use(gin.Recovery())
 	router.Use(middleware.RequestIDMiddleware())
-	router.Use(middleware.CORSMiddleware([]string{"*"}))
+	router.Use(middleware.SecurityHeaders())
+	router.Use(middleware.CORSMiddleware(allowedOrigins))
 
 	// Health endpoints (no auth required)
 	router.GET("/health", healthHandler.Health)
 	router.GET("/ready", healthHandler.Ready)
 
-	// Auth endpoints (public)
+	// Initialize rate limiters
+	authRateLimiter := middleware.NewRateLimiter(middleware.RateLimitConfig{
+		RequestsPerMinute: 10,
+		BurstSize:         5,
+		CleanupInterval:   5 * time.Minute,
+	})
+	otpRateLimiter := middleware.NewRateLimiter(middleware.RateLimitConfig{
+		RequestsPerMinute: 5,
+		BurstSize:         2,
+		CleanupInterval:   5 * time.Minute,
+	})
+
+	// Auth endpoints (public) with rate limiting
 	auth := router.Group("/api/v1/auth")
+	auth.Use(authRateLimiter.Middleware())
 	{
 		auth.POST("/register", authHandler.Register)
 		auth.POST("/login", authHandler.Login)
@@ -91,8 +120,14 @@ func main() {
 		auth.POST("/forgot-password", authHandler.ForgotPassword)
 		auth.POST("/reset-password", authHandler.ResetPassword)
 		auth.POST("/verify-email", authHandler.VerifyEmail)
-		auth.POST("/otp/request", authHandler.RequestOTP)
-		auth.POST("/otp/verify", authHandler.VerifyOTP)
+	}
+
+	// OTP endpoints with stricter rate limiting
+	otp := router.Group("/api/v1/auth/otp")
+	otp.Use(otpRateLimiter.Middleware())
+	{
+		otp.POST("/request", authHandler.RequestOTP)
+		otp.POST("/verify", authHandler.VerifyOTP)
 	}
 
 	// Protected auth endpoints

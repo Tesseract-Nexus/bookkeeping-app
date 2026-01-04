@@ -69,6 +69,19 @@ type AppConfig struct {
 
 // Load loads configuration from environment variables
 func Load(serviceName string) (*Config, error) {
+	environment := GetEnv("GIN_MODE", "debug")
+	jwtSecret := GetEnv("JWT_SECRET", "")
+
+	// Validate JWT_SECRET in production
+	if environment == "release" && jwtSecret == "" {
+		return nil, fmt.Errorf("JWT_SECRET is required in production mode")
+	}
+
+	// Validate JWT_SECRET minimum length
+	if jwtSecret != "" && len(jwtSecret) < 32 {
+		return nil, fmt.Errorf("JWT_SECRET must be at least 32 characters long")
+	}
+
 	config := &Config{
 		Server: ServerConfig{
 			Host: GetEnv("HOST", "0.0.0.0"),
@@ -96,7 +109,7 @@ func Load(serviceName string) (*Config, error) {
 			URL: GetEnv("NATS_URL", "nats://localhost:4222"),
 		},
 		JWT: JWTConfig{
-			Secret:          GetEnv("JWT_SECRET", ""),
+			Secret:          jwtSecret,
 			Issuer:          GetEnv("JWT_ISSUER", "bookkeeping-auth"),
 			AccessTokenTTL:  GetEnvAsDuration("JWT_ACCESS_TOKEN_TTL", 15*time.Minute),
 			RefreshTokenTTL: GetEnvAsDuration("JWT_REFRESH_TOKEN_TTL", 7*24*time.Hour),
@@ -104,7 +117,7 @@ func Load(serviceName string) (*Config, error) {
 		},
 		App: AppConfig{
 			Name:        serviceName,
-			Environment: GetEnv("GIN_MODE", "debug"),
+			Environment: environment,
 			LogLevel:    GetEnv("LOG_LEVEL", "info"),
 			Version:     GetEnv("APP_VERSION", "0.1.0"),
 		},

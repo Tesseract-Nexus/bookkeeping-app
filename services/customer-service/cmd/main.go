@@ -70,10 +70,25 @@ func main() {
 	// Setup router
 	router := gin.New()
 
+	// Allowed CORS origins
+	allowedOrigins := []string{
+		"https://app.bookkeep.in",
+		"https://www.bookkeep.in",
+		"https://bookkeep.in",
+	}
+	if !cfg.IsProduction() {
+		allowedOrigins = append(allowedOrigins,
+			"http://localhost:3000",
+			"http://localhost:3001",
+			"exp://localhost:19000",
+		)
+	}
+
 	// Apply middleware
 	router.Use(gin.Recovery())
 	router.Use(middleware.RequestIDMiddleware())
-	router.Use(middleware.CORSMiddleware([]string{"*"}))
+	router.Use(middleware.SecurityHeaders())
+	router.Use(middleware.CORSMiddleware(allowedOrigins))
 
 	// Health endpoints (no auth required)
 	router.GET("/health", healthHandler.Health)

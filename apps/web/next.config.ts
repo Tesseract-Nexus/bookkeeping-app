@@ -4,8 +4,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'standalone',
 
-  // Temporarily ignore TypeScript errors until framer-motion
-  // adds React 19 support (https://github.com/framer/motion/issues/2595)
+  // TODO: Remove this once framer-motion is fully removed from the codebase.
+  // Current issue: framer-motion has React 18 types that conflict with React 19.
+  // Files still using framer-motion: button.tsx, card.tsx, empty-state.tsx,
+  // header.tsx, stats-cards.tsx, charts.tsx, recent-activity.tsx,
+  // customers/page.tsx, invoices/page.tsx
+  // Solution: Replace framer-motion animations with CSS animations (see globals.css)
   typescript: {
     ignoreBuildErrors: true,
   },

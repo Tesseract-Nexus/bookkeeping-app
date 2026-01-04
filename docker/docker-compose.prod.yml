@@ -120,6 +120,11 @@ services:
           cpus: '0.5'
           memory: 256M
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Bookkeeping Service
   bookkeeping-service:
@@ -147,6 +152,11 @@ services:
           cpus: '0.75'
           memory: 512M
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8084/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Invoice Service
   invoice-service:
@@ -174,6 +184,11 @@ services:
           cpus: '0.75'
           memory: 512M
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Report Service
   report-service:
@@ -201,6 +216,11 @@ services:
           cpus: '0.5'
           memory: 512M
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8086/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # PostgreSQL Database
   postgres:
@@ -252,12 +272,17 @@ services:
   # NATS Message Queue
   nats:
     image: nats:2-alpine
-    command: "--js --sd /data"
+    command: "--js --sd /data -m 8222"
     volumes:
       - nats_data:/data
     networks:
       - bookkeep
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Web Application
   web:
@@ -281,6 +306,12 @@ services:
           cpus: '0.5'
           memory: 512M
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:
   bookkeep:

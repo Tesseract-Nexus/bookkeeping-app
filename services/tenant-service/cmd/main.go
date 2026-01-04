@@ -72,8 +72,23 @@ func main() {
 
 	r := gin.Default()
 
+	// Allowed CORS origins
+	allowedOrigins := []string{
+		"https://app.bookkeep.in",
+		"https://www.bookkeep.in",
+		"https://bookkeep.in",
+	}
+	if os.Getenv("GIN_MODE") != "release" {
+		allowedOrigins = append(allowedOrigins,
+			"http://localhost:3000",
+			"http://localhost:3001",
+			"exp://localhost:19000",
+		)
+	}
+
 	// Apply global middleware
-	r.Use(middleware.CORS())
+	r.Use(middleware.SecurityHeaders())
+	r.Use(middleware.CORSMiddleware(allowedOrigins))
 	r.Use(middleware.RequestIDMiddleware())
 	r.Use(middleware.LoggerMiddleware())
 	r.Use(middleware.RecoveryMiddleware())

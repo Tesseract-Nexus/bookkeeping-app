@@ -59,19 +59,51 @@ func main() {
 	healthHandler := handlers.NewHealthHandler(db)
 
 	// Setup router
-	if cfg.Environment == "production" {
+	isProduction := cfg.Environment == "production"
+	if isProduction {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.Default()
 
-	// CORS middleware
+	// Allowed CORS origins
+	allowedOrigins := map[string]bool{
+		"https://app.bookkeep.in": true,
+		"https://www.bookkeep.in": true,
+		"https://bookkeep.in":     true,
+	}
+	if !isProduction {
+		allowedOrigins["http://localhost:3000"] = true
+		allowedOrigins["http://localhost:3001"] = true
+		allowedOrigins["exp://localhost:19000"] = true
+	}
+
+	// CORS middleware with security headers
 	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Tenant-ID")
+		origin := c.Request.Header.Get("Origin")
+
+		// Security headers
+		c.Writer.Header().Set("X-Frame-Options", "DENY")
+		c.Writer.Header().Set("X-XSS-Protection", "1; mode=block")
+		c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
+		c.Writer.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+		c.Writer.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+
+		// CORS headers for allowed origins only
+		if allowedOrigins[origin] {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Tenant-ID, X-Request-ID")
+			c.Writer.Header().Set("Access-Control-Expose-Headers", "X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-Request-ID")
+			c.Writer.Header().Set("Access-Control-Max-Age", "86400")
+		}
 
 		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(http.StatusNoContent)
+			if allowedOrigins[origin] {
+				c.AbortWithStatus(http.StatusNoContent)
+			} else {
+				c.AbortWithStatus(http.StatusForbidden)
+			}
 			return
 		}
 

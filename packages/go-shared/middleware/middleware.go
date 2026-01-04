@@ -23,29 +23,44 @@ func RequestIDMiddleware() gin.HandlerFunc {
 }
 
 // CORSMiddleware handles CORS headers
+// Note: Wildcard "*" origins are only allowed in development mode for security
 func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
+	// Build a map for O(1) origin lookup
+	originMap := make(map[string]bool)
+	allowWildcard := false
+	for _, origin := range allowedOrigins {
+		if origin == "*" {
+			allowWildcard = true
+		} else {
+			originMap[origin] = true
+		}
+	}
+
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
+		if origin == "" {
+			c.Next()
+			return
+		}
 
 		// Check if origin is allowed
-		allowed := false
-		for _, allowedOrigin := range allowedOrigins {
-			if allowedOrigin == "*" || allowedOrigin == origin {
-				allowed = true
-				break
-			}
-		}
+		allowed := originMap[origin] || allowWildcard
 
 		if allowed {
 			c.Header("Access-Control-Allow-Origin", origin)
 			c.Header("Access-Control-Allow-Credentials", "true")
 			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 			c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Request-ID, X-Tenant-ID")
+			c.Header("Access-Control-Expose-Headers", "X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-Request-ID")
 			c.Header("Access-Control-Max-Age", "86400")
 		}
 
 		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(http.StatusNoContent)
+			if allowed {
+				c.AbortWithStatus(http.StatusNoContent)
+			} else {
+				c.AbortWithStatus(http.StatusForbidden)
+			}
 			return
 		}
 

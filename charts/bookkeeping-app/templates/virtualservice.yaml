@@ -1,0 +1,120 @@
+{{- if .Values.virtualService.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ .Release.Name }}-vs
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  hosts:
+    {{- range .Values.virtualService.hosts }}
+    - {{ . | quote }}
+    {{- end }}
+  gateways:
+    - {{ .Values.virtualService.gateway }}
+  http:
+    # Web App - serves the frontend
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: {{ .Release.Name }}-web-app
+            port:
+              number: 3000
+
+    # Auth Service API
+    - match:
+        - uri:
+            prefix: /api/v1/auth
+      rewrite:
+        uri: /api/v1/auth
+      route:
+        - destination:
+            host: {{ .Release.Name }}-auth-service
+            port:
+              number: 8080
+
+    # Tenant Service API
+    - match:
+        - uri:
+            prefix: /api/v1/tenants
+      rewrite:
+        uri: /api/v1/tenants
+      route:
+        - destination:
+            host: {{ .Release.Name }}-tenant-service
+            port:
+              number: 8080
+
+    # Customer Service API
+    - match:
+        - uri:
+            prefix: /api/v1/customers
+      rewrite:
+        uri: /api/v1/customers
+      route:
+        - destination:
+            host: {{ .Release.Name }}-customer-service
+            port:
+              number: 8080
+
+    # Invoice Service API
+    - match:
+        - uri:
+            prefix: /api/v1/invoices
+      rewrite:
+        uri: /api/v1/invoices
+      route:
+        - destination:
+            host: {{ .Release.Name }}-invoice-service
+            port:
+              number: 8080
+
+    # Bookkeeping Service API (transactions, accounts, etc.)
+    - match:
+        - uri:
+            prefix: /api/v1/transactions
+      rewrite:
+        uri: /api/v1/transactions
+      route:
+        - destination:
+            host: {{ .Release.Name }}-bookkeeping-service
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: /api/v1/accounts
+      rewrite:
+        uri: /api/v1/accounts
+      route:
+        - destination:
+            host: {{ .Release.Name }}-bookkeeping-service
+            port:
+              number: 8080
+
+    # Tax Service API
+    - match:
+        - uri:
+            prefix: /api/v1/tax
+      rewrite:
+        uri: /api/v1/tax
+      route:
+        - destination:
+            host: {{ .Release.Name }}-tax-service
+            port:
+              number: 8080
+
+    # Report Service API
+    - match:
+        - uri:
+            prefix: /api/v1/reports
+      rewrite:
+        uri: /api/v1/reports
+      route:
+        - destination:
+            host: {{ .Release.Name }}-report-service
+            port:
+              number: 8080
+{{- end }}

@@ -1,0 +1,50 @@
+apiVersion: v2
+name: bookkeeping-app
+description: Bookkeeping Application - Multi-tenant SaaS platform
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: Tesseract Nexus
+    email: team@tesseract-nexus.com
+
+dependencies:
+  - name: go-service
+    version: "0.1.0"
+    repository: "file://charts/go-service"
+    alias: auth-service
+    condition: auth-service.enabled
+  - name: go-service
+    version: "0.1.0"
+    repository: "file://charts/go-service"
+    alias: bookkeeping-service
+    condition: bookkeeping-service.enabled
+  - name: go-service
+    version: "0.1.0"
+    repository: "file://charts/go-service"
+    alias: customer-service
+    condition: customer-service.enabled
+  - name: go-service
+    version: "0.1.0"
+    repository: "file://charts/go-service"
+    alias: invoice-service
+    condition: invoice-service.enabled
+  - name: go-service
+    version: "0.1.0"
+    repository: "file://charts/go-service"
+    alias: report-service
+    condition: report-service.enabled
+  - name: go-service
+    version: "0.1.0"
+    repository: "file://charts/go-service"
+    alias: tax-service
+    condition: tax-service.enabled
+  - name: go-service
+    version: "0.1.0"
+    repository: "file://charts/go-service"
+    alias: tenant-service
+    condition: tenant-service.enabled
+  - name: web-app
+    version: "0.1.0"
+    repository: "file://charts/web-app"
+    condition: web-app.enabled

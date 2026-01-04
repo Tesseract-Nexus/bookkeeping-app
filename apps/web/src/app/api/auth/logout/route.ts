@@ -22,12 +22,14 @@ export async function POST(request: NextRequest) {
     // Clear cookies
     const res = NextResponse.json({ success: true });
     res.cookies.delete('refresh_token');
+    res.cookies.delete('access_token');
 
     return res;
   } catch {
     // Always return success for logout
     const res = NextResponse.json({ success: true });
     res.cookies.delete('refresh_token');
+    res.cookies.delete('access_token');
     return res;
   }
 }

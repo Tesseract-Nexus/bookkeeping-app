@@ -10,7 +10,14 @@ import { NotificationsApi } from './api/notifications';
 
 export * from './types';
 export * from './client';
-export * from './api';
+export { AuthApi } from './api/auth';
+export { CustomersApi, VendorsApi, PartiesApi } from './api/customers';
+export { TransactionsApi, AccountsApi } from './api/transactions';
+export { InvoicesApi } from './api/invoices';
+export { ReportsApi } from './api/reports';
+export { TenantsApi } from './api/tenants';
+export { UsersApi } from './api/users';
+export { NotificationsApi } from './api/notifications';
 
 export interface BookKeepApiConfig extends ClientConfig {
   tokenStorage?: TokenStorage;

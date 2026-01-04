@@ -63,14 +63,17 @@ func main() {
 	// Initialize repositories
 	accountRepo := repository.NewAccountRepository(db)
 	transactionRepo := repository.NewTransactionRepository(db)
+	bankRepo := repository.NewBankRepository(db)
 
 	// Initialize services
 	accountService := services.NewAccountService(accountRepo)
 	transactionService := services.NewTransactionService(transactionRepo, accountRepo)
+	bankService := services.NewBankService(bankRepo, transactionRepo)
 
 	// Initialize handlers
 	accountHandler := handlers.NewAccountHandler(accountService)
 	transactionHandler := handlers.NewTransactionHandler(transactionService)
+	bankHandler := handlers.NewBankHandler(bankService)
 	healthHandler := handlers.NewHealthHandler(db)
 
 	// Setup router
@@ -133,6 +136,24 @@ func main() {
 			transactions.GET("/daily-summary", transactionHandler.GetDailySummary)
 			transactions.GET("/:id", transactionHandler.GetTransaction)
 			transactions.POST("/:id/void", transactionHandler.VoidTransaction)
+		}
+
+		// Bank Accounts & Reconciliation
+		bank := api.Group("/bank")
+		{
+			bank.GET("/accounts", bankHandler.ListBankAccounts)
+			bank.POST("/accounts", bankHandler.CreateBankAccount)
+			bank.GET("/accounts/:id", bankHandler.GetBankAccount)
+			bank.PUT("/accounts/:id", bankHandler.UpdateBankAccount)
+			bank.DELETE("/accounts/:id", bankHandler.DeleteBankAccount)
+			bank.POST("/accounts/:id/import", bankHandler.ImportStatement)
+			bank.GET("/accounts/:id/transactions", bankHandler.GetBankTransactions)
+			bank.GET("/accounts/:id/unreconciled", bankHandler.GetUnreconciledTransactions)
+			bank.POST("/accounts/:id/auto-reconcile", bankHandler.AutoReconcile)
+			bank.GET("/accounts/:id/reconciliation-summary", bankHandler.GetReconciliationSummary)
+			bank.POST("/transactions/:tx_id/reconcile", bankHandler.ReconcileTransaction)
+			bank.POST("/transactions/:tx_id/unreconcile", bankHandler.UnreconcileTransaction)
+			bank.GET("/transactions/:tx_id/suggest-matches", bankHandler.SuggestMatches)
 		}
 	}
 

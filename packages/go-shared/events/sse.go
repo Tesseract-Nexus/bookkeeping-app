@@ -263,26 +263,8 @@ func sendSSEMessage(w io.Writer, msg SSEMessage) {
 	fmt.Fprintf(w, "data: %s\n\n", msg.Data)
 }
 
-// Event types
-const (
-	EventInvoiceCreated     = "invoice.created"
-	EventInvoiceUpdated     = "invoice.updated"
-	EventInvoicePaid        = "invoice.paid"
-	EventInvoiceOverdue     = "invoice.overdue"
-	EventBillCreated        = "bill.created"
-	EventBillUpdated        = "bill.updated"
-	EventBillPaid           = "bill.paid"
-	EventPaymentReceived    = "payment.received"
-	EventTransactionCreated = "transaction.created"
-	EventBankReconciled     = "bank.reconciled"
-	EventCustomerCreated    = "customer.created"
-	EventCustomerUpdated    = "customer.updated"
-	EventVendorCreated      = "vendor.created"
-	EventVendorUpdated      = "vendor.updated"
-	EventReportGenerated    = "report.generated"
-	EventNotification       = "notification"
-	EventDashboardUpdate    = "dashboard.update"
-)
+// Event types are defined in publisher.go
+// Use EventType constants from that file for SSE events
 
 // NewMessage creates a new SSE message with data
 func NewMessage(event string, data interface{}) SSEMessage {
@@ -305,10 +287,10 @@ type NotificationData struct {
 
 // SendNotification sends a notification to a user
 func (h *Hub) SendNotification(tenantID, userID string, notification NotificationData) {
-	h.BroadcastToUser(tenantID, userID, NewMessage(EventNotification, notification))
+	h.BroadcastToUser(tenantID, userID, NewMessage(string(EventNotification), notification))
 }
 
 // SendNotificationToTenant sends a notification to all users in a tenant
 func (h *Hub) SendNotificationToTenant(tenantID string, notification NotificationData) {
-	h.Broadcast(tenantID, NewMessage(EventNotification, notification))
+	h.Broadcast(tenantID, NewMessage(string(EventNotification), notification))
 }

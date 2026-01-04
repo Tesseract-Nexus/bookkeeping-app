@@ -58,6 +58,9 @@ func main() {
 		&models.Invoice{},
 		&models.InvoiceItem{},
 		&models.Payment{},
+		&models.Bill{},
+		&models.BillItem{},
+		&models.BillPayment{},
 	); err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
@@ -65,12 +68,16 @@ func main() {
 	// Initialize repositories
 	invoiceRepo := repository.NewInvoiceRepository(db)
 	paymentRepo := repository.NewPaymentRepository(db)
+	billRepo := repository.NewBillRepository(db)
+	billPaymentRepo := repository.NewBillPaymentRepository(db)
 
 	// Initialize services
 	invoiceService := services.NewInvoiceService(invoiceRepo, paymentRepo)
+	billService := services.NewBillService(billRepo, billPaymentRepo)
 
 	// Initialize handlers
 	invoiceHandler := handlers.NewInvoiceHandler(invoiceService)
+	billHandler := handlers.NewBillHandler(billService)
 	healthHandler := handlers.NewHealthHandler(db)
 
 	// Setup router
@@ -130,6 +137,20 @@ func main() {
 			einvoice.POST("/:id/generate", invoiceHandler.GenerateEInvoice)
 			einvoice.GET("/:id/status", invoiceHandler.GetEInvoiceStatus)
 			einvoice.POST("/:id/cancel", invoiceHandler.CancelEInvoice)
+		}
+
+		// Bill endpoints
+		bills := api.Group("/bills")
+		{
+			bills.GET("", billHandler.List)
+			bills.POST("", billHandler.Create)
+			bills.GET("/overdue", billHandler.GetOverdue)
+			bills.GET("/payables-summary", billHandler.GetPayablesSummary)
+			bills.GET("/:id", billHandler.Get)
+			bills.PUT("/:id", billHandler.Update)
+			bills.DELETE("/:id", billHandler.Delete)
+			bills.POST("/:id/approve", billHandler.Approve)
+			bills.POST("/:id/payments", billHandler.RecordPayment)
 		}
 	}
 

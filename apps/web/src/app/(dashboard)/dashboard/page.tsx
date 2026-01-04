@@ -1,6 +1,3 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import { Plus, Download, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/layout/header';
@@ -173,16 +170,18 @@ export default function DashboardPage() {
       />
 
       {/* Stats Cards */}
-      <DashboardStats {...statsData} />
+      <div className="animate-fade-in-up animation-delay-100">
+        <DashboardStats {...statsData} />
+      </div>
 
       {/* Main Charts Row */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 animate-fade-in-up animation-delay-200">
         <RevenueChart data={revenueData} className="lg:col-span-2" />
         <InvoiceStatusChart data={invoiceStatusData} />
       </div>
 
       {/* Secondary Row */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 animate-fade-in-up animation-delay-300">
         <CashFlowChart data={cashFlowData} className="lg:col-span-2" />
         <TaxComplianceCard
           gstFiled={true}
@@ -193,7 +192,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Activity and Lists Row */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 animate-fade-in-up animation-delay-400">
         <RecentActivity activities={recentActivities} className="lg:col-span-1" />
         <RecentInvoices invoices={recentInvoices} className="lg:col-span-1" />
         <TopCustomers customers={topCustomers} className="lg:col-span-1" />

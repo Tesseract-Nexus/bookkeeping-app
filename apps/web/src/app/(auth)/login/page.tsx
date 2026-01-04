@@ -2,8 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Chrome } from 'lucide-react';
+import { Mail, ArrowRight } from 'lucide-react';
 import { Button, MotionButton } from '@/components/ui/button';
 import { Input, PasswordInput } from '@/components/ui/input';
 import { LabeledCheckbox } from '@/components/ui/checkbox';
@@ -25,31 +24,17 @@ export default function LoginPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="text-center lg:text-left">
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold tracking-tight"
-        >
+      <div className="text-center lg:text-left animate-fade-in-up">
+        <h1 className="text-3xl font-bold tracking-tight">
           Welcome back
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-muted-foreground mt-2"
-        >
+        </h1>
+        <p className="text-muted-foreground mt-2">
           Sign in to your account to continue
-        </motion.p>
+        </p>
       </div>
 
       {/* Social login buttons */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="grid grid-cols-2 gap-4"
-      >
+      <div className="grid grid-cols-2 gap-4 animate-fade-in-up animation-delay-100">
         <Button variant="outline" className="h-12">
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -77,18 +62,12 @@ export default function LoginPage() {
           </svg>
           GitHub
         </Button>
-      </motion.div>
+      </div>
 
       <LabeledSeparator label="or continue with email" />
 
       {/* Login form */}
-      <motion.form
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        onSubmit={handleSubmit}
-        className="space-y-4"
-      >
+      <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in-up animation-delay-200">
         <Input
           label="Email"
           type="email"
@@ -125,28 +104,18 @@ export default function LoginPage() {
           Sign In
           <ArrowRight className="ml-2 h-4 w-4" />
         </MotionButton>
-      </motion.form>
+      </form>
 
       {/* Sign up link */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="text-center text-sm text-muted-foreground"
-      >
+      <p className="text-center text-sm text-muted-foreground animate-fade-in animation-delay-300">
         Don&apos;t have an account?{' '}
         <Link href="/signup" className="text-primary font-medium hover:underline">
           Sign up for free
         </Link>
-      </motion.p>
+      </p>
 
       {/* Terms */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="text-center text-xs text-muted-foreground"
-      >
+      <p className="text-center text-xs text-muted-foreground animate-fade-in animation-delay-400">
         By signing in, you agree to our{' '}
         <Link href="/terms" className="underline hover:text-foreground">
           Terms of Service
@@ -155,7 +124,7 @@ export default function LoginPage() {
         <Link href="/privacy" className="underline hover:text-foreground">
           Privacy Policy
         </Link>
-      </motion.p>
+      </p>
     </div>
   );
 }

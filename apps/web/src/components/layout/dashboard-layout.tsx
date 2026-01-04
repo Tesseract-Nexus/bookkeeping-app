@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { motion } from 'framer-motion';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
 import { cn } from '@/lib/utils';
@@ -27,19 +26,19 @@ export function DashboardLayout({
         collapsed={sidebarCollapsed}
         onCollapsedChange={setSidebarCollapsed}
       />
-      <motion.div
-        initial={false}
-        animate={{ marginLeft: sidebarCollapsed ? 80 : 280 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="flex flex-col min-h-screen"
+      <div
+        className={cn(
+          "flex flex-col min-h-screen transition-all duration-300",
+          sidebarCollapsed ? "ml-20" : "ml-[280px]"
+        )}
       >
         <Header title={title} subtitle={subtitle} actions={headerActions} />
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 animate-fade-in">
           <div className="mx-auto max-w-7xl">
             {children}
           </div>
         </main>
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -75,12 +74,7 @@ export function ContentSection({
   className,
 }: ContentSectionProps) {
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 }}
-      className={cn('mb-8', className)}
-    >
+    <section className={cn('mb-8 animate-fade-in-up', className)}>
       {(title || actions) && (
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -93,6 +87,6 @@ export function ContentSection({
         </div>
       )}
       {children}
-    </motion.section>
+    </section>
   );
 }

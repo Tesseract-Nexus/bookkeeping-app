@@ -2,8 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Mail, Lock, User, Building2, ArrowRight, Check } from 'lucide-react';
+import { Mail, User, Building2, ArrowRight, Check } from 'lucide-react';
 import { Button, MotionButton } from '@/components/ui/button';
 import { Input, PasswordInput } from '@/components/ui/input';
 import { LabeledCheckbox } from '@/components/ui/checkbox';
@@ -49,31 +48,17 @@ export default function SignupPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="text-center lg:text-left">
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold tracking-tight"
-        >
+      <div className="text-center lg:text-left animate-fade-in-up">
+        <h1 className="text-3xl font-bold tracking-tight">
           Create your account
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-muted-foreground mt-2"
-        >
+        </h1>
+        <p className="text-muted-foreground mt-2">
           Start managing your business finances today
-        </motion.p>
+        </p>
       </div>
 
       {/* Progress indicator */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="flex items-center gap-2"
-      >
+      <div className="flex items-center gap-2 animate-fade-in-up animation-delay-100">
         <div className={cn(
           'h-2 flex-1 rounded-full transition-colors',
           step >= 1 ? 'bg-primary' : 'bg-muted'
@@ -82,36 +67,23 @@ export default function SignupPage() {
           'h-2 flex-1 rounded-full transition-colors',
           step >= 2 ? 'bg-primary' : 'bg-muted'
         )} />
-      </motion.div>
+      </div>
 
       {/* Features list */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="grid grid-cols-2 gap-2"
-      >
-        {features.map((feature, i) => (
-          <motion.div
+      <div className="grid grid-cols-2 gap-2 animate-fade-in-up animation-delay-200">
+        {features.map((feature) => (
+          <div
             key={feature}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 + i * 0.05 }}
             className="flex items-center gap-2 text-sm text-muted-foreground"
           >
             <Check className="h-4 w-4 text-success" />
             {feature}
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
 
       {/* Social signup buttons */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
-        className="grid grid-cols-2 gap-4"
-      >
+      <div className="grid grid-cols-2 gap-4 animate-fade-in-up animation-delay-300">
         <Button variant="outline" className="h-12">
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -139,18 +111,12 @@ export default function SignupPage() {
           </svg>
           GitHub
         </Button>
-      </motion.div>
+      </div>
 
       <LabeledSeparator label="or continue with email" />
 
       {/* Signup form */}
-      <motion.form
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        onSubmit={handleSubmit}
-        className="space-y-4"
-      >
+      <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in-up animation-delay-400">
         {step === 1 ? (
           <>
             <Input
@@ -241,20 +207,15 @@ export default function SignupPage() {
             <ArrowRight className="ml-2 h-4 w-4" />
           </MotionButton>
         </div>
-      </motion.form>
+      </form>
 
       {/* Sign in link */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="text-center text-sm text-muted-foreground"
-      >
+      <p className="text-center text-sm text-muted-foreground animate-fade-in animation-delay-500">
         Already have an account?{' '}
         <Link href="/login" className="text-primary font-medium hover:underline">
           Sign in
         </Link>
-      </motion.p>
+      </p>
     </div>
   );
 }

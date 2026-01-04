@@ -1,8 +1,5 @@
-'use client';
-
 import * as React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import {
   FileText,
   CheckCircle2,
@@ -10,7 +7,6 @@ import {
   CreditCard,
   PieChart,
   Users,
-  Shield,
   Zap,
   ArrowRight,
   Building2,
@@ -85,11 +81,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-      >
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-fade-in-down">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
@@ -117,56 +109,37 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-      </motion.header>
+      </header>
 
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 sm:py-32">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-mesh opacity-50" />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/30 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
 
         <div className="container relative mx-auto px-4">
           <div className="text-center max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
+            <div className="animate-fade-in-up animation-delay-100">
               <Badge variant="secondary" className="mb-6">
                 <Zap className="h-3 w-3 mr-1" />
                 Now with E-Invoice 2.0 Support
               </Badge>
-            </motion.div>
+            </div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight"
-            >
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight animate-fade-in-up animation-delay-200">
               Bookkeeping Made
               <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
                 {' '}Effortless
               </span>
-            </motion.h1>
+            </h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto"
-            >
+            <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in-up animation-delay-300">
               The complete business finance solution for Indian SMEs. Invoice, track expenses,
               file GST returns, and stay 100% compliant - all in one place.
-            </motion.p>
+            </p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
-            >
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up animation-delay-400">
               <Link href="/signup">
                 <Button size="xl" className="w-full sm:w-auto">
                   Start Free 14-Day Trial
@@ -177,52 +150,34 @@ export default function HomePage() {
                 <Play className="mr-2 h-5 w-5" />
                 Watch Demo
               </Button>
-            </motion.div>
+            </div>
 
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-6 text-sm text-muted-foreground"
-            >
+            <p className="mt-6 text-sm text-muted-foreground animate-fade-in animation-delay-500">
               No credit card required. Cancel anytime.
-            </motion.p>
+            </p>
           </div>
 
           {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8"
-          >
+          <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 animate-fade-in-up animation-delay-600">
             {stats.map((stat, i) => (
-              <motion.div
+              <div
                 key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 + i * 0.1 }}
                 className="text-center"
               >
                 <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
                   {stat.value}
                 </div>
                 <div className="mt-1 text-sm text-muted-foreground">{stat.label}</div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Features Section */}
       <section id="features" className="py-20 sm:py-32 bg-muted/30">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center max-w-2xl mx-auto mb-16"
-          >
+          <div className="text-center max-w-2xl mx-auto mb-16 animate-fade-in-up">
             <Badge variant="secondary" className="mb-4">Features</Badge>
             <h2 className="text-3xl sm:text-4xl font-bold">
               Everything you need to manage your finances
@@ -230,18 +185,14 @@ export default function HomePage() {
             <p className="mt-4 text-muted-foreground">
               Built specifically for Indian businesses with complete GST and compliance support.
             </p>
-          </motion.div>
+          </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
             {features.map((feature, i) => {
               const Icon = feature.icon;
               return (
-                <motion.div
+                <div
                   key={feature.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
                   className="group p-6 rounded-2xl bg-card border shadow-sm hover:shadow-lg transition-all duration-300"
                 >
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
@@ -249,7 +200,7 @@ export default function HomePage() {
                   </div>
                   <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                   <p className="text-muted-foreground">{feature.description}</p>
-                </motion.div>
+                </div>
               );
             })}
           </div>
@@ -259,27 +210,18 @@ export default function HomePage() {
       {/* Testimonials Section */}
       <section id="testimonials" className="py-20 sm:py-32">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center max-w-2xl mx-auto mb-16"
-          >
+          <div className="text-center max-w-2xl mx-auto mb-16 animate-fade-in-up">
             <Badge variant="secondary" className="mb-4">Testimonials</Badge>
             <h2 className="text-3xl sm:text-4xl font-bold">
               Loved by thousands of businesses
             </h2>
-          </motion.div>
+          </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-6 stagger-children">
             {testimonials.map((testimonial, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="p-6 rounded-2xl bg-card border shadow-sm"
+                className="p-6 rounded-2xl bg-card border shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="flex gap-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
@@ -291,7 +233,7 @@ export default function HomePage() {
                   <div className="font-semibold">{testimonial.author}</div>
                   <div className="text-sm text-muted-foreground">{testimonial.role}</div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -300,12 +242,7 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-20 sm:py-32 bg-gradient-to-br from-primary via-primary/90 to-purple-600">
         <div className="container mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-2xl mx-auto"
-          >
+          <div className="max-w-2xl mx-auto animate-fade-in-up">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
               Ready to simplify your bookkeeping?
             </h2>
@@ -325,7 +262,7 @@ export default function HomePage() {
                 </Button>
               </Link>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 

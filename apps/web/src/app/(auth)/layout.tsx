@@ -1,8 +1,5 @@
-'use client';
-
 import * as React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { Building2 } from 'lucide-react';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -16,41 +13,21 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Floating shapes */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"
-        />
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="absolute bottom-20 left-20 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl"
-        />
+        <div className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse" />
 
         {/* Logo */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="relative z-10"
-        >
+        <div className="relative z-10 animate-fade-in-down">
           <Link href="/" className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
               <Building2 className="h-7 w-7 text-white" />
             </div>
             <span className="text-2xl font-bold text-white">BookKeep</span>
           </Link>
-        </motion.div>
+        </div>
 
         {/* Testimonial/Feature */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="relative z-10 space-y-6"
-        >
+        <div className="relative z-10 space-y-6 animate-fade-in-up animation-delay-200">
           <blockquote className="text-xl text-white/90 leading-relaxed">
             &ldquo;BookKeep has transformed how we manage our finances. GST compliance
             has never been easier, and the invoicing system saves us hours every week.&rdquo;
@@ -64,15 +41,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <p className="text-sm text-white/70">CEO, TechStart India</p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="relative z-10 grid grid-cols-3 gap-8"
-        >
+        <div className="relative z-10 grid grid-cols-3 gap-8 animate-fade-in-up animation-delay-400">
           <div>
             <p className="text-3xl font-bold text-white">10K+</p>
             <p className="text-sm text-white/70">Active Users</p>
@@ -85,17 +57,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <p className="text-3xl font-bold text-white">99.9%</p>
             <p className="text-sm text-white/70">Uptime</p>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Right side - Auth form */}
       <div className="flex items-center justify-center p-6 sm:p-12">
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="w-full max-w-md"
-        >
+        <div className="w-full max-w-md animate-fade-in-right animation-delay-300">
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8">
             <Link href="/" className="flex items-center gap-3">
@@ -107,7 +74,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
 
           {children}
-        </motion.div>
+        </div>
       </div>
     </div>
   );
